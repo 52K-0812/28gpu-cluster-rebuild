@@ -424,18 +424,6 @@ kubectl patch svc proxy-public -n ai-team \
 
 ## 📁 작업 문서
 
-### 0. 클러스터 운영 가이드
-
-| 문서                                                                    | 내용                                                       |
-| ----------------------------------------------------------------------- | ---------------------------------------------------------- |
-| [🏗️ 풀스택 아키텍처](./docs/0.서버관리/0_풀스택_아키텍처.md)            | 물리 구성 + 소프트웨어 스택 전체 Mermaid 다이어그램        |
-| [네트워크 트래픽 플로우](./docs/0.서버관리/1_네트워크_트래픽_플로우.md) | 1GbE/10GbE 경로 분리 · 외부 접속 구조 다이어그램           |
-| [GPU 리소스 할당 맵](./docs/0.서버관리/2_GPU_리소스_할당_맵.md)         | 노드별 GPU 현황 · K8s 스케줄링 전략                        |
-| [스토리지 계층 구조](./docs/0.서버관리/3_스토리지_계층_구조.md)         | NAS → PV → PVC → Pod 전체 흐름                             |
-| [서비스 포트 맵](./docs/0.서버관리/4_서비스_포트_맵.md)                 | 공개/관리자/내부 포트 번호 체계 전체 정리                  |
-| [장애 복구 타임라인](./docs/0.서버관리/5_장애_복구_타임라인.md)         | 3/12 ~ 4/2 전체 구축 & 장애 이력 Mermaid 다이어그램        |
-| [etcd 백업 및 DR 검증 ⭐](./docs/0.서버관리/6_etcd_백업_및_DR_검증.md)  | 호스트 crontab 자동 백업 · NAS 저장 · snapshot 무결성 검증 |
-
 ### 1. CHEETAH 클러스터 복구
 
 | 문서                                                                            | 내용                                   |
@@ -472,18 +460,19 @@ kubectl patch svc proxy-public -n ai-team \
 
 ### 4. ML 파이프라인 구축
 
-| 문서                                                                                                                                | 내용                                                                    |
-| ----------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------- |
-| [YOLOv8 COCO 학습 및 웹캠 추론 ⭐](./docs/4.ML_파이프라인_구축/4_02_YOLOv8_COCO_학습_및_웹캠_추론_테스트.md)                        | K8s Job 파이프라인 · mAP@0.5 46.8% · 실시간 추론 성공                   |
-| [YOLOv8 VisDrone 멀티GPU 학습 Job ⭐](./docs/4.ML_파이프라인_구축/4_03_YOLOv8_VisDrone_멀티GPU_학습_Job.md)                         | V100 4장 DDP · VisDrone 드론 Object Detection 학습                      |
-| [YOLOv8 VisDrone 학습 결과 보고서](./docs/4.ML_파이프라인_구축/4_04_YOLOv8_VisDrone_학습_결과_보고서.md)                            | 학습 결과 분석 · mAP@0.5 33.4% · 소형 객체 한계 분석                    |
-| [Argo Workflows 설치 및 WorkflowTemplate 구성 ⭐](./docs/4.ML_파이프라인_구축/4_06_Argo_Workflows_설치_및_WorkflowTemplate_구성.md) | Helm 설치 · MetalLB UI 노출 · 팀원 웹 UI Job 제출 환경 완성             |
-| [Alertmanager 이메일 알람 구성 ⭐](./docs/4.ML_파이프라인_구축/4_07_Alertmanager_이메일_알람_구성.md)                               | Gmail SMTP 연동 · GPU 온도/메모리/노드 다운 알람 3종 · 실제 수신 확인   |
-| [Argo DAG 파이프라인 구성 ⭐](./docs/4.ML_파이프라인_구축/4_07_Argo_DAG_파이프라인_구성.md)                                         | 데이터검증→학습→평가→버전별저장 4단계 · visdrone-v1.pt/v2.pt 버전 관리  |
-| [Argo Workflows Tailscale 접속 및 포트 변경](./docs/4.ML_파이프라인_구축/4_09_Argo_Workflows_Tailscale_접속_및_포트_변경.md)        | 포트 2746 → 30340 · systemd port-forward · Tailscale 외부 접속          |
-| [Filebrowser NAS 파일 탐색기 구축](./docs/4.ML_파이프라인_구축/4_13_Filebrowser_NAS_파일_탐색기_구축.md)                            | NAS /data 웹 GUI · NodePort 30340 · 업로드/다운로드/권한 관리           |
-| [MLflow 설치 및 Argo DAG 연동 ⭐](4_13_MLflow_설치_및_Argo_DAG_연동.md)                                                             | PostgreSQL 백엔드 · params 105개 + metrics 자동 기록 · 버전별 모델 저장 |
-| [GitHub Actions CI/CD ⭐](./docs/4.ML_파이프라인_구축/4_13_GitHub_Actions_CICD.md)                                                  | Self-hosted Runner · git push → Argo Workflow 자동 트리거 · 16s 완료    |
+| 문서                                                                                                                | 내용                                                            |
+| ----------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------- |
+| [YOLOv8 COCO 학습 및 웹캠 추론 ⭐](./docs/4.ML_파이프라인_구축/4_02_YOLOv8_COCO_학습_및_웹캠_추론_테스트.md)                               | K8s Job 파이프라인 · mAP@0.5 46.8% · 실시간 추론 성공                     |
+| [YOLOv8 VisDrone 멀티GPU 학습 Job ⭐](./docs/4.ML_파이프라인_구축/4_03_YOLOv8_VisDrone_멀티GPU_학습_Job.md)                       | V100 4장 DDP · VisDrone 드론 Object Detection 학습                 |
+| [YOLOv8 VisDrone 학습 결과 보고서](./docs/4.ML_파이프라인_구축/4_04_YOLOv8_VisDrone_학습_결과_보고서.md)                               | 학습 결과 분석 · mAP@0.5 33.4% · 소형 객체 한계 분석                        |
+| [Argo Workflows 설치 및 WorkflowTemplate 구성 ⭐](./docs/4.ML_파이프라인_구축/4_06_Argo_Workflows_설치_및_WorkflowTemplate_구성.md) | Helm 설치 · MetalLB UI 노출 · 팀원 웹 UI Job 제출 환경 완성                |
+| [Alertmanager 이메일 알람 구성 ⭐](./docs/4.ML_파이프라인_구축/4_07_Alertmanager_이메일_알람_구성.md)                                   | Gmail SMTP 연동 · GPU 온도/메모리/노드 다운 알람 3종 · 실제 수신 확인             |
+| [Argo DAG 파이프라인 구성 ⭐](./docs/4.ML_파이프라인_구축/4_07_Argo_DAG_파이프라인_구성.md)                                             | 데이터검증→학습→평가→버전별저장 4단계 · visdrone-v1.pt/v2.pt 버전 관리            |
+| [Argo Workflows Tailscale 접속 및 포트 변경](./docs/4.ML_파이프라인_구축/4_09_Argo_Workflows_Tailscale_접속_및_포트_변경.md)           | 포트 2746 → 30340 · systemd port-forward · Tailscale 외부 접속      |
+| [Filebrowser NAS 파일 탐색기 구축](./docs/4.ML_파이프라인_구축/4_13_Filebrowser_NAS_파일_탐색기_구축.md)                               | NAS /data 웹 GUI · NodePort 30340 · 업로드/다운로드/권한 관리             |
+| [MLflow 설치 및 Argo DAG 연동 ⭐](4_13_MLflow_설치_및_Argo_DAG_연동.md)                                                      | PostgreSQL 백엔드 · params 105개 + metrics 자동 기록 · 버전별 모델 저장      |
+| [GitHub Actions CI/CD ⭐](./docs/4.ML_파이프라인_구축/4_13_GitHub_Actions_CICD.md)                                        | Self-hosted Runner · git push → Argo Workflow 자동 트리거 · 16s 완료 |
+| [etcd 백업 및 DR 검증 ⭐](./docs/4.ML_파이프라인_구축/4_13_etcd_백업_및_DR_검증)                                                    | 호스트 crontab 자동 백업 · NAS 저장 · snapshot 무결성 검증                  |
 
 ### 5. 트러블슈팅
 
