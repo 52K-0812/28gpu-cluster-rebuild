@@ -13,8 +13,8 @@
 
 ## 2. 문제 현상
 
-- Tailscale VPN 연결 자체는 정상, Grafana(`http://(vpn-endpoint)3000`) 등 다른 서비스는 접속 가능
-- Portainer 대시보드(`https://(vpn-endpoint)9443`)에만 갑자기 접속 불가
+- Tailscale VPN 연결 자체는 정상, Grafana(`http://TAILSCALE_HOST3000`) 등 다른 서비스는 접속 가능
+- Portainer 대시보드(`https://TAILSCALE_HOST9443`)에만 갑자기 접속 불가
 - 브라우저에서 `ERR_CONNECTION_REFUSED` 또는 무한 로딩 발생
 - `kubectl get pods -n portainer` 조회 시 Pod는 `1/1 Running` 정상 상태
 - MetalLB Controller, Speaker 포드 모두 Running
@@ -26,7 +26,7 @@
 **🛠️ 사용 명령어 (진단):**
 
 ```bash
-kubectl get svc -n portainer          # External-IP (control-plane-public-ip), 9443 Endpoints 정상 확인
+kubectl get svc -n portainer          # External-IP LB_PUBLIC_IP, 9443 Endpoints 정상 확인
 ss -tlnp | grep 9443                  # kubectl(pid=2208981)이 0.0.0.0:9443 점유 확인
 ps aux | grep 2208981                 # kubectl port-forward svc/portainer 프로세스 확인
 sudo systemctl list-units | grep kubectl  # kubectl-portainer.service active(running) 확인
@@ -67,7 +67,7 @@ sudo systemctl status kubectl-portainer.service
 ## 5. 결과
 
 - `kubectl-portainer.service` 재시작 후 port-forward 터널이 Portainer Pod와 정상 재연결
-- Tailscale IP(`https://(vpn-endpoint)9443`)를 통한 Portainer 대시보드 접속 완전 정상화
+- Tailscale IP(`https://TAILSCALE_HOST9443`)를 통한 Portainer 대시보드 접속 완전 정상화
   ![자료사진](../images/스크린샷_2026-03-26_170937.png)
 
 ---

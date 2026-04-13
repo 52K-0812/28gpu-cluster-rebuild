@@ -60,7 +60,7 @@
 
 ---
 
-## ## 🧭 기술 선택 근거
+## 🧭 기술 선택 근거
 
 | 항목             | 검토한 대안       | 선택               | 선택 근거                                                                                             |
 | ---------------- | ----------------- | ------------------ | ----------------------------------------------------------------------------------------------------- |
@@ -130,10 +130,10 @@
 ━━━ Phase 3 : 팀 환경 구축 및 서비스 안정화 (3/30 ~ 4/2) ━━━━━━━━━━━━━━
 
 3월 30일  ──  AI 팀 환경 구축 (RBAC + JupyterHub + GPU 검증)
-              └ ai-team 네임스페이스 + RBAC ((팀이름)-01~05) 구성
+              └ ai-team 네임스페이스 + RBAC (user-01~05) 구성
               └ JupyterHub Helm 배포 (chart 4.3.3 / JupyterHub 5.4.4)
               └ 이미지 호환성 문제 해결 → cschranz/gpu-jupyter:v1.6_cuda-12.0_ubuntu-22.04 채택
-              └ Tailscale port-forward systemd 서비스 등록 → http://(vpn-endpoint)8000
+              └ Tailscale port-forward systemd 서비스 등록 → http://TAILSCALE_HOST:8000
               └ K8s 스케줄러 GPU 자동 배정 확인 (V100 / 2080Ti 분산 배치)
               └ TensorFlow / PyTorch CUDA 인식 완료
               └ MNIST 소프트맥스 회귀 학습 성공 (정확도 89%, GPU 연산)
@@ -143,9 +143,9 @@
               └ kubectl port-forward 남용 → 1인용 터널의 한계 확인
               └ MetalLB IP Pool에 master-01 IP(151) 포함 → ARP 충돌 → speaker 89회 재시작
               └ Calico CrashLoopBackOff 연쇄 장애 복구
-              └ 구 클러스터 허용 IP((control-plane-public-ip)) MetalLB Pool 재활용
+              └ 구 클러스터 허용 IP(LB_PUBLIC_IP) MetalLB Pool 재활용
               └ 서비스 구조 재설계: 학과생용(158, 포트 없음) / 관리자용(151:303xx) 분리
-              └ JupyterHub http://(control-plane-public-ip) 공개 접속 완성
+              └ JupyterHub http://LB_PUBLIC_IP 공개 접속 완성
               └ Grafana 전용 ServiceAccount(grafana-sa) 생성 → 최소 권한 원칙 적용
 
 4월 2일   ──  10GbE 라우팅 최적화 — ML 학습을 위한 인프라 정비
@@ -174,7 +174,7 @@
 
 4월 6일   ──  Argo Workflows 도입 → MLOps 파이프라인 1단계 완성 ⭐
               └ Argo Workflows v4 Helm 설치 (install.yaml CRD 누락 문제 → Helm으로 해결)
-              └ MetalLB IP Pool에 (control-plane-public-ip) 추가 → Argo UI 외부 노출
+              └ MetalLB IP Pool에 LB_PUBLIC_IP 추가 → Argo UI 외부 노출
               └ ai-team 네임스페이스 연동 (controller.workflowNamespaces 설정)
               └ NAS /data/datasets 직접 마운트 Static PV/PVC 구성 (nfs-datasets-pvc)
               └ YOLOv8 VisDrone WorkflowTemplate 작성 (epochs/batch/gpu-type 파라미터화)
@@ -196,7 +196,7 @@
               └   · master-01 NoSchedule taint로 인한 의도된 상태 → Silence 1년 등록
               └ Argo UI 포트 변경 (2746 → 30500) + Helm upgrade
               └ systemd port-forward 서비스로 Tailscale 접속 구성
-              └ http://(vpn-endpoint)30500 외부 접속 완료
+              └ http://TAILSCALE_HOST:30500 외부 접속 완료
 
 4월 13일  ──  etcd 백업 · MLflow · Filebrowser · GitHub Actions CI/CD ⭐
               └ [etcd 백업] distroless 컨테이너 대응 → /proc/{pid}/root 스냅샷 복사
@@ -347,7 +347,7 @@ sudo systemctl disable kubectl-jupyterhub.service
 
 # proxy-public LoadBalancer 전환
 kubectl patch svc proxy-public -n ai-team \
-  -p '{"spec": {"type": "LoadBalancer", "loadBalancerIP": "(control-plane-public-ip)"}}'
+  -p '{"spec": {"type": "LoadBalancer", "loadBalancerIP": "LB_PUBLIC_IP"}}'
 ```
 
 > `kubectl port-forward`는 개발자 1인용 디버깅 도구다. 다중 사용자 환경에 systemd 서비스로 등록하면 WebSocket 세션 충돌이 필연적으로 발생한다. MetalLB IP Pool에 노드 자체 IP를 절대 포함하지 마라.
@@ -386,8 +386,8 @@ kubectl patch svc proxy-public -n ai-team \
 | 스토리지      | **27.3TB** NFS 마운트 완료                                          |
 | 내부 네트워크 | **전 노드 ~9Gbps** (1G → 10G, 약 10배)                              |
 | 모니터링      | Grafana GPU 실시간 대시보드 (온도/전력/메모리)                      |
-| 공용 접속     | `http://(control-plane-public-ip)` (포트 번호 없음, 학내 직접 접속) |
-| 원격 접속     | `http://(vpn-endpoint)30000` (Tailscale VPN)                        |
+| 공용 접속     | `http://LB_PUBLIC_IP` (포트 번호 없음, 학내 직접 접속) |
+| 원격 접속     | `http://TAILSCALE_HOST:30000` (Tailscale VPN)                        |
 | 관리자 접속   | Grafana `:30300` / Prometheus `:30310` / Portainer `:30320`         |
 | 팀 환경       | JupyterHub (5명 계정, GPU 자동 배정, NFS 홈 디렉토리)               |
 | GPU 검증      | TensorFlow / PyTorch CUDA 인식, MNIST 학습 성공 (정확도 89%)        |
@@ -470,9 +470,9 @@ kubectl patch svc proxy-public -n ai-team \
 | [Argo DAG 파이프라인 구성 ⭐](./docs/4.ML_파이프라인_구축/4_07_Argo_DAG_파이프라인_구성.md)                                             | 데이터검증→학습→평가→버전별저장 4단계 · visdrone-v1.pt/v2.pt 버전 관리            |
 | [Argo Workflows Tailscale 접속 및 포트 변경](./docs/4.ML_파이프라인_구축/4_09_Argo_Workflows_Tailscale_접속_및_포트_변경.md)           | 포트 2746 → 30340 · systemd port-forward · Tailscale 외부 접속      |
 | [Filebrowser NAS 파일 탐색기 구축](./docs/4.ML_파이프라인_구축/4_13_Filebrowser_NAS_파일_탐색기_구축.md)                               | NAS /data 웹 GUI · NodePort 30340 · 업로드/다운로드/권한 관리             |
-| [MLflow 설치 및 Argo DAG 연동 ⭐](4_13_MLflow_설치_및_Argo_DAG_연동.md)                                                      | PostgreSQL 백엔드 · params 105개 + metrics 자동 기록 · 버전별 모델 저장      |
+| [MLflow 설치 및 Argo DAG 연동 ⭐](./docs/4.ML_파이프라인_구축/4_13_MLflow_설치_및_Argo_DAG_연동.md)                                                      | PostgreSQL 백엔드 · params 105개 + metrics 자동 기록 · 버전별 모델 저장      |
 | [GitHub Actions CI/CD ⭐](./docs/4.ML_파이프라인_구축/4_13_GitHub_Actions_CICD.md)                                        | Self-hosted Runner · git push → Argo Workflow 자동 트리거 · 16s 완료 |
-| [etcd 백업 및 DR 검증 ⭐](./docs/4.ML_파이프라인_구축/4_13_etcd_백업_및_DR_검증)                                                    | 호스트 crontab 자동 백업 · NAS 저장 · snapshot 무결성 검증                  |
+| [etcd 백업 및 DR 검증 ⭐](./docs/4.ML_파이프라인_구축/4_13_etcd_백업_및_DR_검증.md)                                                    | 호스트 crontab 자동 백업 · NAS 저장 · snapshot 무결성 검증                  |
 
 ### 5. 트러블슈팅
 

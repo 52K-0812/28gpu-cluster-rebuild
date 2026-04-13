@@ -4,9 +4,9 @@
 
 > **작업 일자:** 2026-04-13
 > **작업 목적:** NAS(`/data`) 파일을 웹 GUI로 탐색·업로드·다운로드할 수 있는 파일 탐색기를 구축한다.
-> **대상 서버:** master-01 ((control-plane-public-ip)), monitoring 네임스페이스, NAS ((control-plane-public-ip))
+> **대상 서버:** master-01 (LB_PUBLIC_IP), monitoring 네임스페이스, NAS (NAS_IP)
 > **작업 환경:** Kubernetes v1.29, monitoring 네임스페이스
-> **최종 결과:** `http://(control-plane-public-ip):30340` (학교망) / `http://(vpn-endpoint)30340` (Tailscale) 접속 완료
+> **최종 결과:** `http://LB_PUBLIC_IP:30340` (학교망) / `http://TAILSCALE_HOST:30340` (Tailscale) 접속 완료
 
 ---
 
@@ -48,7 +48,7 @@ NodePort :30340
         │
         ▼
 filebrowser Pod (monitoring 네임스페이스)
-    ├── /srv  ← nfs-pv-filebrowser (NAS (control-plane-public-ip):/data)
+    ├── /srv  ← nfs-pv-filebrowser (NAS NAS_IP:/data)
     └── /database ← filebrowser-db-pvc (계정/설정 영구 보존)
 ```
 
@@ -78,7 +78,7 @@ spec:
     - ReadWriteMany
   persistentVolumeReclaimPolicy: Retain
   nfs:
-    server: (control-plane-public-ip)
+    server: NAS_IP
     path: /data
 ---
 apiVersion: v1
@@ -220,7 +220,7 @@ kubectl logs -n monitoring -l app=filebrowser | grep "randomly generated"
 
 | 항목                   | 결과                                                                            |
 | ---------------------- | ------------------------------------------------------------------------------- |
-| **접속**               | `http://(control-plane-public-ip):30340` 정상 접속                              |
+| **접속**               | `http://LB_PUBLIC_IP:30340` 정상 접속                              |
 | **NAS 탐색**           | `/data/datasets/`, `/data/models/`, `/data/backups/` 등 전체 디렉토리 탐색 가능 |
 | **계정 영구 보존**     | `filebrowser-db-pvc` PVC로 Pod 재시작 후에도 계정 유지                          |
 | **레거시 데이터 정리** | `cheetah-volume-*`, `lost+found`, 테스트 PVC 폴더 삭제 완료                     |

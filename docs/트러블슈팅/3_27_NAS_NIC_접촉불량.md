@@ -6,7 +6,7 @@
 | ------------- | ------------------------------------------------------------------------------------------ |
 | **목적**      | nas-01 10G NIC 펌웨어 크래시로 완전 먹통 상태 진단 및 물리 재삽입으로 복구                 |
 | **대상**      | nas-01 (Ubuntu 22.04 LTS), Broadcom BCM57810, Supermicro X11SSL-F                          |
-| **구성**      | 1G 관리망: eno1 → (control-plane-public-ip) / 10G 데이터망: BCM57810                       |
+| **구성**      | 1G 관리망: eno1 → LB_PUBLIC_IP / 10G 데이터망: BCM57810                       |
 | **핵심 전략** | `rev ff` 진단으로 소프트웨어 복구 불가 확인 → PCIe 물리 재삽입 → netplan 인터페이스명 수정 |
 | **발생일**    | 2026-03-27                                                                                 |
 
@@ -141,12 +141,12 @@ network:
   ethernets:
     eno1:
       addresses:
-        - (control-plane-public-ip)/24
+        - LB_PUBLIC_IP/24
       nameservers:
         addresses: [8.8.8.8, 8.8.4.4]
       routes:
         - to: default
-          via: (control-plane-public-ip)
+          via: LB_PUBLIC_IP
     enp1s0f0: # 변경된 인터페이스명
       addresses:
         - (storage-backend-ip)/24

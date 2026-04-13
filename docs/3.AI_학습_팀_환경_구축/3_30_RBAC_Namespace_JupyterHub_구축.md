@@ -4,7 +4,7 @@
 
 > **작업 일자:** 2026-03-30
 > **작업 목적**: 28-GPU 클러스터 위에 AI 팀원 5명이 독립적으로 Python / TensorFlow / CUDA 환경을 사용할 수 있도록 네임스페이스 격리, RBAC 권한 구조, JupyterHub 플랫폼을 구축.
-> **대상 서버**: master-01 ((control-plane-public-ip))
+> **대상 서버**: master-01 (LB_PUBLIC_IP)
 > **작업 환경**: Kubernetes v1.29, Helm v3, Tailscale VPN
 > **최종 결과**: 팀원 5명 계정 생성 완료 및 JupyterLab 브라우저 접속 성공
 
@@ -81,31 +81,31 @@ kubectl apply -f - <<'EOF'
 apiVersion: v1
 kind: ServiceAccount
 metadata:
-  name: (팀이름)-01
+  name: user-01
   namespace: ai-team
 ---
 apiVersion: v1
 kind: ServiceAccount
 metadata:
-  name: (팀이름)-02
+  name: user-02
   namespace: ai-team
 ---
 apiVersion: v1
 kind: ServiceAccount
 metadata:
-  name: (팀이름)-03
+  name: user-03
   namespace: ai-team
 ---
 apiVersion: v1
 kind: ServiceAccount
 metadata:
-  name: (팀이름)-04
+  name: user-04
   namespace: ai-team
 ---
 apiVersion: v1
 kind: ServiceAccount
 metadata:
-  name: (팀이름)-05
+  name: user-05
   namespace: ai-team
 EOF
 ```
@@ -121,19 +121,19 @@ metadata:
   namespace: ai-team
 subjects:
 - kind: ServiceAccount
-  name: (팀이름)-01
+  name: user-01
   namespace: ai-team
 - kind: ServiceAccount
-  name: (팀이름)-02
+  name: user-02
   namespace: ai-team
 - kind: ServiceAccount
-  name: (팀이름)-03
+  name: user-03
   namespace: ai-team
 - kind: ServiceAccount
-  name: (팀이름)-04
+  name: user-04
   namespace: ai-team
 - kind: ServiceAccount
-  name: (팀이름)-05
+  name: user-05
   namespace: ai-team
 roleRef:
   kind: Role
@@ -180,14 +180,14 @@ hub:
     JupyterHub:
       authenticator_class: dummy
     DummyAuthenticator:
-      password: '(패스워드)'
+      password: 'YOUR_PASSWORD'
     Authenticator:
       allowed_users:
-        - (팀이름)-01
-        - (팀이름)-02
-        - (팀이름)-03
-        - (팀이름)-04
-        - (팀이름)-05
+        - user-01
+        - user-02
+        - user-03
+        - user-04
+        - user-05
 
 singleuser:
   image:
@@ -263,8 +263,8 @@ sudo systemctl enable --now kubectl-jupyterhub
 
 | 경로        | 주소                                  |
 | ----------- | ------------------------------------- |
-| Tailscale   | http://(vpn-endpoint)8000             |
-| 내부망 직접 | http://(control-plane-public-ip):8000 |
+| Tailscale   | http://TAILSCALE_HOST:8000             |
+| 내부망 직접 | http://LB_PUBLIC_IP:8000 |
 
 ---
 
@@ -295,7 +295,7 @@ sudo systemctl enable --now kubectl-jupyterhub
 
 ```bash
 kubectl get pods -n ai-team -o wide | grep jupyter
-# jupyter-(팀이름)-01   1/1   Running   0   39s   192.168.202.230   2080ti-gpu-02
+# jupyter-user-01   1/1   Running   0   39s   192.168.202.230   2080ti-gpu-02
 ```
 
 K8s 스케줄러가 빈 GPU 노드를 자동으로 선택하여 배치. 1차 접속 시 `v100-gpu-01`, 2차 접속 시 `2080ti-gpu-02` — 상황에 따라 다른 노드 선택.

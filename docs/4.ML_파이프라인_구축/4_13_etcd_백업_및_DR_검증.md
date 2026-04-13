@@ -40,8 +40,8 @@ mount | grep nfs
 ```
 
 ```
-(control-plane-public-ip):/data   28T  4.0G   26T   1% /data
-(control-plane-public-ip):/data on /data type nfs4 (rw,relatime,vers=4.2 ...)
+LB_PUBLIC_IP:/data   28T  4.0G   26T   1% /data
+LB_PUBLIC_IP:/data on /data type nfs4 (rw,relatime,vers=4.2 ...)
 ```
 
 master-01에 `/data`로 NFS 마운트되어 있음을 확인. 백업 디렉토리 생성:
@@ -181,8 +181,8 @@ sudo mv /var/lib/etcd /var/lib/etcd.bak
 sudo etcdutl snapshot restore /data/backups/etcd/etcd-snapshot-{TIMESTAMP}.db \
   --data-dir=/var/lib/etcd \
   --name=master-01 \
-  --initial-cluster=master-01=https://(control-plane-public-ip):2380 \
-  --initial-advertise-peer-urls=https://(control-plane-public-ip):2380
+  --initial-cluster=master-01=https://LB_PUBLIC_IP:2380 \
+  --initial-advertise-peer-urls=https://LB_PUBLIC_IP:2380
 
 # 4. etcd 재시작
 sudo mv /tmp/etcd.yaml /etc/kubernetes/manifests/

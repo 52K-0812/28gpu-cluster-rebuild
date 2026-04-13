@@ -27,7 +27,7 @@
 | 단계 | 진단 명령어                                                      | 결과                          |
 | ---- | ---------------------------------------------------------------- | ----------------------------- |
 | 1    | `kubectl get pods -n gpu-operator \| grep dcgm`                  | 4개 Pod 모두 1/1 Running ✅   |
-| 2    | `curl http://(control-plane-public-ip):9400/metrics \| head -30` | DCGM 메트릭 정상 출력 ✅      |
+| 2    | `curl http://LB_PUBLIC_IP:9400/metrics \| head -30` | DCGM 메트릭 정상 출력 ✅      |
 | 3    | `curl localhost:9090/api/v1/query?query=DCGM_FI_DEV_SM_CLOCK`    | `result: []` — 수집 안 됨 ❌  |
 | 4    | `kubectl get servicemonitor -n gpu-operator`                     | gpu-operator SM 존재 확인     |
 | 5    | `kubectl get servicemonitor -n monitoring \| grep dcgm`          | nvidia-dcgm-exporter SM 발견  |
@@ -61,7 +61,7 @@
 
 ```bash
 kubectl get pods -n gpu-operator -o wide | grep dcgm
-curl -s http://(control-plane-public-ip):9400/metrics | head -30
+curl -s http://LB_PUBLIC_IP:9400/metrics | head -30
 ```
 
 ---

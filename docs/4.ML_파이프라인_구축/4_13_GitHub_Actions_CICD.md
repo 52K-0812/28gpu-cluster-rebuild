@@ -4,7 +4,7 @@
 
 > **작업 일자:** 2026-04-13
 > **작업 목적:** GitHub 프라이빗 레포에 코드를 push하면 Self-hosted Runner가 감지하여 Argo Workflow를 자동으로 트리거하는 CI/CD 파이프라인을 구성한다.
-> **대상 서버:** master-01 ((control-plane-public-ip))
+> **대상 서버:** master-01 (LB_PUBLIC_IP)
 > **작업 환경:** Kubernetes v1.29, GitHub Actions, Self-hosted Runner, Argo Workflows v4.0.4
 > **최종 결과:** git push → GitHub Actions 트리거 (16s) → Argo cicd-pipeline 자동 생성 및 실행 확인
 
@@ -86,7 +86,7 @@ curl -o actions-runner-linux-x64-2.333.1.tar.gz -L \
 tar xzf ./actions-runner-linux-x64-2.333.1.tar.gz
 
 # Runner 등록 (GitHub 페이지에서 토큰 발급)
-./config.sh --url https://github.com/(username)/28gpu-cluster-cicd \
+./config.sh --url https://github.com/YOUR_GITHUB_USERNAME/28gpu-cluster-cicd \
             --token [GITHUB_발급_토큰]
 
 # 입력값
@@ -107,7 +107,7 @@ sudo ./svc.sh status
 **정상 출력:**
 
 ```
-● actions.runner.(username)-28gpu-cluster-cicd.master-01.service
+● actions.runner.YOUR_GITHUB_USERNAME-28gpu-cluster-cicd.master-01.service
      Active: active (running)
 ```
 
@@ -119,7 +119,7 @@ sudo ./svc.sh status
 
 ```bash
 cd ~
-git clone https://[토큰]@github.com/(username)/28gpu-cluster-cicd.git
+git clone https://[토큰]@github.com/YOUR_GITHUB_USERNAME/28gpu-cluster-cicd.git
 cd 28gpu-cluster-cicd
 mkdir -p .github/workflows
 ```
@@ -189,7 +189,7 @@ EOF
 
 ```bash
 git config --global user.email "[이메일]"
-git config --global user.name "(username)"
+git config --global user.name "YOUR_GITHUB_USERNAME"
 git add .
 git commit -m "feat: Add Argo Workflow CI/CD trigger"
 git push origin main
@@ -229,7 +229,7 @@ cicd-pipeline-lk7wf         Running     2m
 
 ### 7.3 Argo UI 확인
 
-`http://(vpn-endpoint)30500` → `cicd-pipeline-lk7wf` DAG 실시간 실행 확인
+`http://TAILSCALE_HOST:30500` → `cicd-pipeline-lk7wf` DAG 실시간 실행 확인
 
 ```
 ✅ validate-data → 🔵 train (실행 중) → evaluate → save-model
@@ -251,7 +251,7 @@ refusing to allow a Personal Access Token to create or update workflow
 **해결:** GitHub → Settings → Developer settings → Personal access tokens → Generate new token (classic) → `repo` + `workflow` 두 개 체크
 
 ```bash
-git remote set-url origin https://(username):[새토큰]@github.com/(username)/28gpu-cluster-cicd.git
+git remote set-url origin https://YOUR_GITHUB_USERNAME:[새토큰]@github.com/YOUR_GITHUB_USERNAME/28gpu-cluster-cicd.git
 git push origin main
 ```
 
@@ -267,7 +267,7 @@ fatal: Authentication failed
 **해결:**
 
 ```bash
-git remote set-url origin https://(username):[PAT]@github.com/(username)/28gpu-cluster-cicd.git
+git remote set-url origin https://YOUR_GITHUB_USERNAME:[PAT]@github.com/YOUR_GITHUB_USERNAME/28gpu-cluster-cicd.git
 ```
 
 ---
