@@ -2,12 +2,12 @@
 
 ## 1. 개요
 
-| 항목          | 내용                                                                            |
-| ------------- | ------------------------------------------------------------------------------- |
-| **목적**      | Tailscale VPN을 통한 Portainer 접속 불가 원인 규명 및 복구                      |
-| **대상**      | `kubectl-portainer.service` (systemd port-forward), Portainer 9443 포트         |
-| **핵심 전략** | Pod/MetalLB 정상 확인 후 중간 통로인 port-forward 터널 좀비 상태 진단 및 재시작 |
-| **발생일**    | 2026-03-27                                                                      |
+| 항목        | 내용                                                                    |
+| --------- | --------------------------------------------------------------------- |
+| **목적**    | Tailscale VPN을 통한 Portainer 접속 불가 원인 규명 및 복구                          |
+| **대상**    | `kubectl-portainer.service` (systemd port-forward), Portainer 9443 포트 |
+| **핵심 전략** | Pod/MetalLB 정상 확인 후 중간 통로인 port-forward 터널 좀비 상태 진단 및 재시작             |
+| **발생일**   | 2026-03-27                                                            |
 
 ---
 

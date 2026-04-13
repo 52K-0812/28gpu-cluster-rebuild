@@ -4,7 +4,7 @@
 
 > **작업 일자:** 2026-04-13
 > **작업 목적:** MLflow Tracking Server를 K8s에 배포하고, 기존 Argo DAG 파이프라인(yolov8-dag-pipeline)에 실험 로깅을 연동한다. 학습 실행마다 파라미터·메트릭·아티팩트가 자동으로 기록되어 버전별 성능 비교가 가능한 환경을 구성한다.
-> **대상 서버:** master-01 (LB_PUBLIC_IP), NAS (NAS_IP)
+> **대상 서버:** master-01, NAS
 > **작업 환경:** Kubernetes v1.29, Helm, mlflow 네임스페이스, ai-team 네임스페이스
 > **최종 결과:** MLflow UI 접속 확인, Argo DAG 실행 후 params 105개 + metrics 7개 자동 기록 완료
 

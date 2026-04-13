@@ -4,7 +4,7 @@
 
 > **작업 일자:** 2026-04-03
 > **작업 목적:** VisDrone2019 데이터셋을 NAS에 구축하고, V100 4장 멀티GPU로 YOLOv8 드론 Object Detection 모델을 학습한다.
-> **대상 서버:** v100-gpu-01 ((control-plane-public-ip)), NAS ((control-plane-public-ip))
+> **대상 서버:** v100-gpu-01, NAS
 > **작업 환경:** Kubernetes v1.29, NFS PVC, ultralytics:8.1.0
 > **최종 결과:** V100 4장 DDP 멀티GPU 학습 정상 가동
 

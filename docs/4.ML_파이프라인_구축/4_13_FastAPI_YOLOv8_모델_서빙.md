@@ -4,7 +4,7 @@
 
 > **작업 일자:** 2026-04-13
 > **작업 목적:** 학습된 YOLOv8n (COCO pretrained) 모델을 K8s Deployment로 서빙하고, 웹캠 실시간 캡처 및 이미지 업로드 추론이 가능한 웹 UI를 제공한다.
-> **대상 서버:** 2080ti-gpu-04 ((control-plane-public-ip)), master-01 ((control-plane-public-ip))
+> **대상 서버:** 2080ti-gpu-04 , master-01 
 > **작업 환경:** Kubernetes v1.29, ai-team 네임스페이스, containerd
 > **최종 결과:** YOLOv8 서빙 웹 UI 접속 확인, 웹캠 캡처 → GPU 추론 → 바운딩박스 결과 77ms 응답 확인
 

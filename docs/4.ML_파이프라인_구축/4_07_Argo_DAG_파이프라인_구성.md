@@ -4,7 +4,7 @@
 
 > **작업 일자:** 2026-04-07
 > **작업 목적:** Argo Workflows DAG로 데이터 검증 → 학습 → 모델 평가 → 버전별 저장 파이프라인을 자동화한다. 단계별 의존성을 명시해 이전 단계 실패 시 다음 단계로 진행되지 않도록 설계한다.
-> **대상 서버:** master-01 ((control-plane-public-ip)), v100-gpu-01 ((control-plane-public-ip)), NAS ((control-plane-public-ip))
+> **대상 서버:** master-01, v100-gpu-01, NAS
 > **작업 환경:** Kubernetes v1.29, Argo Workflows v4.0.4, ai-team 네임스페이스
 > **최종 결과:** DAG 4단계 파이프라인 완주, visdrone-v1.pt / visdrone-v2.pt NAS 버전별 저장 확인
 

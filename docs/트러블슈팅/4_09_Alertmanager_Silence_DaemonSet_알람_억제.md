@@ -2,10 +2,10 @@
 
 ## 1. 개요
 
-| 항목 | 내용 |
-|---|---|
-| **목적** | master-01 NoSchedule taint로 인한 오탐 알람 억제 |
-| **대상** | `ai-team/continuous-image-puller` DaemonSet |
+| 항목        | 내용                                              |
+| --------- | ----------------------------------------------- |
+| **목적**    | master-01 NoSchedule taint로 인한 오탐 알람 억제         |
+| **대상**    | `ai-team/continuous-image-puller` DaemonSet     |
 | **핵심 전략** | PrometheusRule 직접 수정 대신 AlertManager Silence 적용 |
 
 ---

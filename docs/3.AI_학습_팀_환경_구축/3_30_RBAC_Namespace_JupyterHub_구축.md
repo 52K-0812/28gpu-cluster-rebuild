@@ -4,7 +4,7 @@
 
 > **작업 일자:** 2026-03-30
 > **작업 목적**: 28-GPU 클러스터 위에 AI 팀원 5명이 독립적으로 Python / TensorFlow / CUDA 환경을 사용할 수 있도록 네임스페이스 격리, RBAC 권한 구조, JupyterHub 플랫폼을 구축.
-> **대상 서버**: master-01 (LB_PUBLIC_IP)
+> **대상 서버**: master-01
 > **작업 환경**: Kubernetes v1.29, Helm v3, Tailscale VPN
 > **최종 결과**: 팀원 5명 계정 생성 완료 및 JupyterLab 브라우저 접속 성공
 

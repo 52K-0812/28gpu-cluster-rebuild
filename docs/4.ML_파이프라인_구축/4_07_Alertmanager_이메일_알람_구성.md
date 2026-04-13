@@ -4,7 +4,7 @@
 
 > **작업 일자:** 2026-04-07
 > **작업 목적:** Prometheus Alertmanager에 Gmail SMTP 연동 및 GPU 특화 알람 룰을 구성해 클러스터 이상 상황을 관리자 이메일로 자동 통보한다.
-> **대상 서버:** master-01 ((control-plane-public-ip)), monitoring 네임스페이스
+> **대상 서버:** master-01 , monitoring 네임스페이스
 > **작업 환경:** kube-prometheus-stack, Alertmanager, PrometheusRule CRD
 > **최종 결과:** GPU 온도/메모리/노드 다운 알람 룰 등록, 실제 클러스터 알람 이메일 수신 확인
 

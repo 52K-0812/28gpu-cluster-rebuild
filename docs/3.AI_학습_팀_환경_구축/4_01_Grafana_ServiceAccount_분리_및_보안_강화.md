@@ -4,7 +4,7 @@
 
 > **작업일:** 2026-04-01
 > **목적:** Grafana 전용 ServiceAccount 생성 → 최소 권한 원칙(Least Privilege) 적용
-> **대상:** master-01 ((control-plane-public-ip)), monitoring 네임스페이스
+> **대상:** master-01, monitoring 네임스페이스
 > **작업 배경:** `default` ServiceAccount 사용으로 인한 권한 격리 부족
 > **작업 내용:** Grafana 전용 `grafana-sa` ServiceAccount 생성 및 RBAC 재구성
 > **최종 결과:** Grafana만 ConfigMap/Secret 접근 권한 보유 ✅

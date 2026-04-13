@@ -1,7 +1,7 @@
 # Ubuntu 22.04 OS 재설치 및 마스터 노드 초기 구성
 
 > **작업 일자:** 2026-03-20
-> **대상 장비:** HPE ProLiant DL360 Gen10 (master-01 / (control-plane-public-ip))
+> **대상 장비:** HPE ProLiant DL360 Gen10 (master-01)
 > **목적:** 레거시 시스템 제거 후 Kubernetes 클러스터 마스터 노드로 재구성
 
 ![자료사진](../images/20260320_122712.jpg)
@@ -17,7 +17,7 @@
 | ------------- | ---------------------------- |
 | **OS**        | Ubuntu 22.04.5 LTS           |
 | **대상 장비** | HPE ProLiant DL360 Gen10     |
-| **IP**        | (control-plane-public-ip)    |
+| **IP**        | MASTER_IP    |
 | **핵심 결정** | LVM 제거 → 디스크 I/O 최적화 |
 
 ---
@@ -49,12 +49,12 @@ network:
   ethernets:
     eno5:
       addresses:
-        - (control-plane-public-ip)/24
+        - MASTER_IP/24
       nameservers:
         addresses: [164.124.101.2, 203.248.252.2]
       routes:
         - to: default
-          via: (control-plane-public-ip)
+          via: GATEWAY_IP
 ```
 
 ---
@@ -103,10 +103,10 @@ ping -c 3 8.8.8.8
 
 ```powershell
 # Windows에서 접속
-ssh ubuntu@(control-plane-public-ip)
+ssh ubuntu@MASTER_IP
 
 # OS 재설치 후 SSH 지문 충돌 발생 시
-ssh-keygen -R (control-plane-public-ip)
+ssh-keygen -R MASTER_IP
 ```
 
 ---
@@ -115,7 +115,7 @@ ssh-keygen -R (control-plane-public-ip)
 
 - Ubuntu 22.04.5 LTS 클린 설치 완료
 - LVM 없는 단일 파티션 구성 (446GB)
-- 고정 IP 할당 (`(control-plane-public-ip)`)
+- 고정 IP 할당 (`MASTER_IP`)
 - SSH 원격 접속 확인
 - 다음 단계: Kubernetes 엔진(Containerd) 설치 진행
 

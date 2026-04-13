@@ -4,7 +4,7 @@
 
 > **작업 일자:** 2026-04-06
 > **작업 목적:** 팀원이 master-01 SSH 접근 없이 웹 UI로 학습 Job을 제출할 수 있도록 Argo Workflows를 설치하고, YOLOv8 VisDrone 학습 WorkflowTemplate을 구성한다.
-> **대상 서버:** master-01 ((control-plane-public-ip)), master-02 ((control-plane-public-ip))
+> **대상 서버:** master-01 , master-02 
 > **작업 환경:** Kubernetes v1.29, Helm, MetalLB, ai-team 네임스페이스
 > **최종 결과:** Argo Workflows UI ((control-plane-public-ip):2746) 접근 가능, YOLOv8 VisDrone WorkflowTemplate 정상 실행
 

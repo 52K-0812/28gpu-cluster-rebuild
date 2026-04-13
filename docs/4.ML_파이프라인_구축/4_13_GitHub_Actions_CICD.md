@@ -4,7 +4,7 @@
 
 > **작업 일자:** 2026-04-13
 > **작업 목적:** GitHub 프라이빗 레포에 코드를 push하면 Self-hosted Runner가 감지하여 Argo Workflow를 자동으로 트리거하는 CI/CD 파이프라인을 구성한다.
-> **대상 서버:** master-01 (LB_PUBLIC_IP)
+> **대상 서버:** master-01
 > **작업 환경:** Kubernetes v1.29, GitHub Actions, Self-hosted Runner, Argo Workflows v4.0.4
 > **최종 결과:** git push → GitHub Actions 트리거 (16s) → Argo cicd-pipeline 자동 생성 및 실행 확인
 

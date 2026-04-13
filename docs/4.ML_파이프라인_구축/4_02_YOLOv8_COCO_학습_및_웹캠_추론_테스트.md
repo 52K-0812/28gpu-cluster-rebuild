@@ -4,7 +4,7 @@
 
 > **작업 일자:** 2026-04-01~02
 > **작업 목적:** K8s Job 파이프라인을 활용해 YOLOv8 모델을 COCO 데이터셋으로 학습하고, 로컬 PC 웹캠으로 실시간 추론 동작을 검증한다.
-> **대상 서버:** master-01 ((control-plane-public-ip)), NAS ((control-plane-public-ip))
+> **대상 서버:** master-01, NAS 
 > **작업 환경:** Kubernetes v1.29, NFS PVC, Anaconda (로컬 PC)
 > **최종 결과:** mAP@0.5 46.8% 달성, 로컬 웹캠 실시간 Object Detection 동작 확인
 
