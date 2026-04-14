@@ -419,10 +419,12 @@ kubectl patch svc proxy-public -n ai-team \
 - [x] GitHub Actions CI/CD — 코드 push → 자동 Argo Workflow 트리거
 - [x] FastAPI 모델 서빙 — K8s Deployment로 /predict 엔드포인트 배포 (77ms, 2080Ti GPU)
 - [x] Filebrowser — NAS 웹 파일 탐색기 배포 (monitoring 네임스페이스)
+- [ ] MLflow alias + FastAPI 엔드포인트 분리 — predict-demo(COCO),predict(champion alias) 분리
+- [ ] Serving 이미지화 — pip install 제거, 컨테이너 이미지 빌드 및 레지스트리 등록
 - [ ] Canary 배포 — 모델 버전 간 트래픽 점진적 전환
 - [ ] Ingress + TLS — HTTPS 적용 (웹캠 getUserMedia 제약 해소)
 - [ ] JupyterHub GitHub OAuth — DummyAuthenticator 교체
-- [ ] K8s 버전 업그레이드 — v1.29 → v1.31 (무중단 롤링 업그레이드, 절차 문서화 완료)
+- [ ] ResourceQuota + PriorityClass — 네임스페이스별 GPU 자원 상한 및 우선순위 정책 적용
 
 ---
 
