@@ -1,7 +1,7 @@
 # Calico CNI 설치 (Pod Network)
 
 > **작업 일자:** 2026-03-20
-> **대상 장비:** master-01
+> **대상 장비:** master-01 (MASTER_IP)
 > **목적:** Pod 간 통신을 위한 네트워크 플러그인 설치
 
 ---
@@ -62,4 +62,4 @@ master-01   Ready    control-plane   Xm
 - master-01 노드 상태 `NotReady` → `Ready` 전환 확인
 - 다음 단계: 마스터 노드 스케줄링 허용 (Taint 해제)
 
-
+![자료사진](../images/Pasted image 20260320154933.png)
