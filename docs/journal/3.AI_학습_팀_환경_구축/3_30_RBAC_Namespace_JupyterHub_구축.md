@@ -5,7 +5,7 @@
 > 이 문서는 2026-03-30 최초 구축 당시의 작업 기록입니다.
 > 여기서 설명하는 `kubectl port-forward` 기반 접속 구조는 이후 다중 접속 장애 원인으로 판명되어 전면 재설계되었습니다.
 >
-> **현재 유효한 구조:** [JupyterHub 다중 접속 장애 및 서비스 재설계](docs/incidents/4_01_JupyterHub_다중_접속_장애_및_서비스_설계_개선.md)참조
+> **현재 유효한 구조:**[JupyterHub 다중 접속 장애 및 서비스 재설계 ⭐](docs/incidents/4_01_JupyterHub_다중_접속_장애_및_서비스_설계_개선.md)참조
 > **현재 아키텍처 요약:**[overview](docs/overview/current-architecture.md)참조
 
 ## 🗂️ 1. 작업 개요

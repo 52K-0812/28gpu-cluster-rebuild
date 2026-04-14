@@ -446,7 +446,7 @@ kubectl patch svc proxy-public -n ai-team \
 │   │   └── 📄 7_GPU_클러스터_완전_구축_가이드
 │   │
 │   ├── 📁 3.AI_학습_팀_환경_구축/        # Phase 3 — JupyterHub · RBAC · 네트워크
-│   │   ├── 📄 3_30_RBAC_Namespace_JupyterHub_구축  [superseded]
+│   │   ├── 📄 3_30_RBAC_Namespace_JupyterHub_구축  ⚠️[superseded]
 │   │   ├── 📄 4_01_Grafana_ServiceAccount_분리_및_보안_강화
 │   │   └── 📄 4_02_GPU_노드_네트워크_최적화_10GbE_라우팅_설정
 │   │
@@ -515,11 +515,11 @@ kubectl patch svc proxy-public -n ai-team \
 
 ### 3. AI 팀 환경 구축
 
-| 문서 | 내용 |
-| ---- | ---- |
-| [RBAC + JupyterHub 구축 ⭐](docs/journal/3.AI_학습_팀_환경_구축/3_30_RBAC_Namespace_JupyterHub_구축.md) | RBAC 5명 계정 · JupyterHub · GPU 자동 배정 · CUDA 검증 |
-| [Grafana ServiceAccount 분리 및 보안 강화](docs/journal/3.AI_학습_팀_환경_구축/4_01_Grafana_ServiceAccount_분리_및_보안_강화.md) | grafana-sa 생성 · 최소 권한 원칙 적용 |
-| [GPU 노드 10GbE 라우팅 최적화 ⭐](docs/journal/3.AI_학습_팀_환경_구축/4_02_GPU_노드_네트워크_최적화_10GbE_라우팅_설정.md) | Pod 통신 경로 1GbE → 10GbE 우선 라우팅 · v100 케이블 교체 |
+| 문서                                                                                                          | 내용                                            |
+| ----------------------------------------------------------------------------------------------------------- | --------------------------------------------- |
+| [RBAC + JupyterHub 구축⚠️(superseded)](docs/journal/3.AI_학습_팀_환경_구축/3_30_RBAC_Namespace_JupyterHub_구축.md)     | RBAC 5명 계정 · JupyterHub · GPU 자동 배정 · CUDA 검증 |
+| [Grafana ServiceAccount 분리 및 보안 강화](docs/journal/3.AI_학습_팀_환경_구축/4_01_Grafana_ServiceAccount_분리_및_보안_강화.md) | grafana-sa 생성 · 최소 권한 원칙 적용                   |
+| [GPU 노드 10GbE 라우팅 최적화 ⭐](docs/journal/3.AI_학습_팀_환경_구축/4_02_GPU_노드_네트워크_최적화_10GbE_라우팅_설정.md)                 | Pod 통신 경로 1GbE → 10GbE 우선 라우팅 · v100 케이블 교체   |
 
 ### 4. ML 파이프라인 구축
 
