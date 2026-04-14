@@ -133,7 +133,7 @@
               └ ai-team 네임스페이스 + RBAC ((팀이름)-01~05) 구성
               └ JupyterHub Helm 배포 (chart 4.3.3 / JupyterHub 5.4.4)
               └ 이미지 호환성 문제 해결 → cschranz/gpu-jupyter:v1.6_cuda-12.0_ubuntu-22.04 채택
-              └ Tailscale port-forward systemd 서비스 등록 → http://(vpn-endpoint)8000
+              └ Tailscale port-forward systemd 서비스 등록 → http://TAILSCALE-IP:8000
               └ K8s 스케줄러 GPU 자동 배정 확인 (V100 / 2080Ti 분산 배치)
               └ TensorFlow / PyTorch CUDA 인식 완료
               └ MNIST 소프트맥스 회귀 학습 성공 (GPU 연산 동작 검증)
@@ -143,9 +143,9 @@
               └ kubectl port-forward 남용 → 1인용 터널의 한계 확인
               └ MetalLB IP Pool에 master-01 IP(151) 포함 → ARP 충돌 → speaker 89회 재시작
               └ Calico CrashLoopBackOff 연쇄 장애 복구
-              └ 구 클러스터 허용 IP((control-plane-public-ip)) MetalLB Pool 재활용
+              └ 구 클러스터 허용 IP(MASTER-IP) MetalLB Pool 재활용
               └ 서비스 구조 재설계: 학과생용(158, 포트 없음) / 관리자용(151:303xx) 분리
-              └ JupyterHub http://(control-plane-public-ip) 공개 접속 완성
+              └ JupyterHub http://MASTER-IP 공개 접속 완성
               └ Grafana 전용 ServiceAccount(grafana-sa) 생성 → 최소 권한 원칙 적용
 
 4월 2일   ──  10GbE 라우팅 최적화 — ML 학습을 위한 인프라 정비
@@ -174,7 +174,7 @@
 
 4월 6일   ──  Argo Workflows 도입 → MLOps 파이프라인 1단계 완성 ⭐
               └ Argo Workflows v4 Helm 설치 (install.yaml CRD 누락 문제 → Helm으로 해결)
-              └ MetalLB IP Pool에 (control-plane-public-ip) 추가 → Argo UI 외부 노출
+              └ MetalLB IP Pool에 MASTER-IP 추가 → Argo UI 외부 노출
               └ ai-team 네임스페이스 연동 (controller.workflowNamespaces 설정)
               └ NAS /data/datasets 직접 마운트 Static PV/PVC 구성 (nfs-datasets-pvc)
               └ YOLOv8 VisDrone WorkflowTemplate 작성 (epochs/batch/gpu-type 파라미터화)
@@ -196,7 +196,7 @@
               └   · master-01 NoSchedule taint로 인한 의도된 상태 → Silence 1년 등록
               └ Argo UI 포트 변경 (2746 → 30500) + Helm upgrade
               └ systemd port-forward 서비스로 Tailscale 접속 구성
-              └ http://(vpn-endpoint)30500 외부 접속 완료
+              └ http://TAILSCALE-IP:30500 외부 접속 완료
 
 4월 13일  ──  마무리 스프린트: 운영 기반 3종 동시 롤아웃 ⭐
               (etcd DR · MLflow 실험추적 · GitHub Actions CI/CD)
@@ -348,7 +348,7 @@ sudo systemctl disable kubectl-jupyterhub.service
 
 # proxy-public LoadBalancer 전환
 kubectl patch svc proxy-public -n ai-team \
-  -p '{"spec": {"type": "LoadBalancer", "loadBalancerIP": "(control-plane-public-ip)"}}'
+  -p '{"spec": {"type": "LoadBalancer", "loadBalancerIP": "MASTER-IP"}}'
 ```
 
 > `kubectl port-forward`는 개발자 1인용 디버깅 도구다. 다중 사용자 환경에 systemd 서비스로 등록하면 WebSocket 세션 충돌이 필연적으로 발생한다. MetalLB IP Pool에 노드 자체 IP를 절대 포함하지 마라.
@@ -387,8 +387,8 @@ kubectl patch svc proxy-public -n ai-team \
 | 스토리지      | **27.3TB** NFS 마운트 완료                                          |
 | 내부 네트워크 | **전 노드 ~9Gbps** (1G → 10G, 약 10배)                              |
 | 모니터링      | Grafana GPU 실시간 대시보드 (온도/전력/메모리)                      |
-| 공용 접속     | `http://(control-plane-public-ip)` (포트 번호 없음, 학내 직접 접속) |
-| 원격 접속     | `http://(vpn-endpoint):30000` (Tailscale VPN)                        |
+| 공용 접속     | `http://MASTER-IP` (포트 번호 없음, 학내 직접 접속) |
+| 원격 접속     | `http://TAILSCALE-IP:30000` (Tailscale VPN)                        |
 | 관리자 접속   | Grafana `:30300` / Prometheus `:30310` / Portainer `:30320`         |
 | 팀 환경       | JupyterHub (5명 계정, GPU 자동 배정, NFS 홈 디렉토리)               |
 | GPU 검증      | TensorFlow / PyTorch CUDA 인식 · MNIST 학습 동작 검증               |
@@ -417,70 +417,135 @@ kubectl patch svc proxy-public -n ai-team \
 - [x] etcd 정기 백업 구성 (호스트 crontab → NAS 자동 저장 + snapshot 무결성 DR 검증)
 - [x] MLflow 연동 — Argo DAG params/metrics 자동 기록 · 버전별 모델 저장
 - [x] GitHub Actions CI/CD — 코드 push → 자동 Argo Workflow 트리거
-- [x] FastAPI 모델 서빙 — K8s Deployment로 /predict 엔드포인트 배포
-- [ ] K8s 버전 업그레이드 — v1.29 → v1.31 (무중단 롤링 업그레이드)
+- [x] FastAPI 모델 서빙 — K8s Deployment로 /predict 엔드포인트 배포 (77ms, 2080Ti GPU)
+- [x] Filebrowser — NAS 웹 파일 탐색기 배포 (monitoring 네임스페이스)
+- [ ] Canary 배포 — 모델 버전 간 트래픽 점진적 전환
+- [ ] Ingress + TLS — HTTPS 적용 (웹캠 getUserMedia 제약 해소)
+- [ ] JupyterHub GitHub OAuth — DummyAuthenticator 교체
+- [ ] K8s 버전 업그레이드 — v1.29 → v1.31 (무중단 롤링 업그레이드, 절차 문서화 완료)
+
+---
+
+## 🗂️ 문서 구조
+
+```
+📁 docs/
+├── 📁 overview/
+│   └── 📄 current-architecture.md       # 현재 유효한 클러스터 구조 한 장 요약
+│
+├── 📁 journal/                          # 날짜순 작업 기록 (증거 문서)
+│   ├── 📁 1.cheetah-복구/               # Phase 1 — 레거시 시스템 복구 시도
+│   │   ├── 📄 3_12_AI_클러스터_복구_1~5
+│   │   ├── 📄 3_16_NAS_복구_1~2
+│   │   ├── 📄 3_17_HPE_ACPI_장애
+│   │   └── 📄 3_19_GPU_드라이버_업데이트  ⭐ 재구축 결정 근거
+│   │
+│   ├── 📁 2.GPU_클러스터_재구축/         # Phase 2 — Ubuntu 22.04 + K8s 신규 구축
+│   │   ├── 📄 0_시스템_재구축_개요
+│   │   ├── 📄 1_백업 ~ 6_워커노드_합류
+│   │   └── 📄 7_GPU_클러스터_완전_구축_가이드
+│   │
+│   ├── 📁 3.AI_학습_팀_환경_구축/        # Phase 3 — JupyterHub · RBAC · 네트워크
+│   │   ├── 📄 3_30_RBAC_Namespace_JupyterHub_구축  [superseded]
+│   │   ├── 📄 4_01_Grafana_ServiceAccount_분리_및_보안_강화
+│   │   └── 📄 4_02_GPU_노드_네트워크_최적화_10GbE_라우팅_설정
+│   │
+│   └── 📁 4.ML_파이프라인_구축/          # Phase 4~5 — YOLOv8 · Argo · MLflow · CI/CD
+│       ├── 📄 4_02_YOLOv8_COCO_학습
+│       ├── 📄 4_03_YOLOv8_VisDrone_멀티GPU_학습_Job
+│       ├── 📄 4_04_YOLOv8_VisDrone_학습_결과_보고서
+│       ├── 📄 4_06_Argo_Workflows_설치_및_WorkflowTemplate_구성
+│       ├── 📄 4_07_Alertmanager_이메일_알람_구성
+│       ├── 📄 4_09_Argo_Workflows_Tailscale_접속_및_포트_변경
+│       ├── 📄 4_13_MLflow_설치_및_Argo_DAG_연동
+│       ├── 📄 4_13_GitHub_Actions_CICD
+│       └── 📄 4_13_FastAPI_YOLOv8_모델_서빙
+│
+├── 📁 runbooks/                         # 운영 절차 · 복구 매뉴얼
+│   ├── 📄 runbook_etcd_restore.md       # etcd 백업 · 스냅샷 복원 DR 검증
+│   ├── 📄 runbook_argo_dag.md           # DAG 파이프라인 구성 · 운영
+│   └── 📄 runbook_model_serving.md      # FastAPI 서빙 배포 · 운영
+│
+├── 📁 incidents/                        # 장애 기록 · 트러블슈팅
+│   ├── 📄 3_23_10G_NIC_이전             ⭐ 하드웨어 재배치로 10G 개통
+│   ├── 📄 3_23_2080Ti_GPU_미인식        ⭐ 27장 확정 판단
+│   ├── 📄 3_27_NAS_NIC_접촉불량         ⭐ rev ff 진단 · PCIe 재삽입
+│   ├── 📄 3_27_Grafana_DCGM_No_data
+│   ├── 📄 3_27_Portainer_Tailscale_접속불가
+│   ├── 📄 3_31_네트워크_장애_및_클러스터_설계_개선  ⭐ MetalLB ARP 충돌 · Calico 연쇄 장애
+│   ├── 📄 4_01_JupyterHub_다중_접속_장애_및_서비스_설계_개선  ⭐ port-forward 제거 · 재설계
+│   ├── 📄 4_01_Grafana_대시보드_미표시_및_RBAC_권한_문제
+│   └── 📄 4_09_Alertmanager_Silence_DaemonSet_알람_억제
+│
+└── 📁 images/
+```
 
 ---
 
 ## 📁 작업 문서
 
+> 현재 클러스터 구조 한 장 요약 → [**overview/current-architecture.md**](docs/overview/current-architecture.md)
+> 운영 절차 → [**docs/runbooks/**](docs/runbooks/)
+
 ### 1. CHEETAH 클러스터 복구
 
-| 문서                                                                            | 내용                                   |
-| ------------------------------------------------------------------------------- | -------------------------------------- |
-| [AI 클러스터 복구 1](./docs/1.cheetah-복구/3_12_AI_클러스터_복구_1.md)          | OS 루트 권한 복구 및 패스워드 초기화   |
-| [AI 클러스터 복구 2](./docs/1.cheetah-복구/3_12_AI_클러스터_복구_2.md)          | K8s 인증서 갱신 및 노드 동기화         |
-| [AI 클러스터 복구 3](./docs/1.cheetah-복구/3_12_AI_클러스터_복구_3.md)          | Elasticsearch/Kibana 메모리 이슈       |
-| [AI 클러스터 복구 4](./docs/1.cheetah-복구/3_12_AI_클러스터_복구_4.md)          | Kafka/Zookeeper 연동 이슈              |
-| [AI 클러스터 복구 5](./docs/1.cheetah-복구/3_12_AI_클러스터_복구_5.md)          | MetalLB LoadBalancer 복구              |
-| [NAS 복구 1](./docs/1.cheetah-복구/3_16_NAS_복구_1.md)                          | RAID 재구성 및 드라이브 장애 해결      |
-| [NAS 복구 2](./docs/1.cheetah-복구/3_16_NAS_복구_2.md)                          | NFS 연결 및 K8s PV 복구                |
-| [HPE ACPI 장애](./docs/1.cheetah-복구/3_17_HPE_ACPI_장애.md)                    | 커널-펌웨어 호환성 문제 해결           |
-| [GPU 드라이버 업데이트 ⭐](./docs/1.cheetah-복구/3_19_GPU_드라이버_업데이트.md) | 재구축 결정의 근거가 된 핵심 판단 문서 |
+| 문서 | 내용 |
+| ---- | ---- |
+| [AI 클러스터 복구 1](docs/journal/1.cheetah-복구/3_12_AI_클러스터_복구_1.md) | OS 루트 권한 복구 및 패스워드 초기화 |
+| [AI 클러스터 복구 2](docs/journal/1.cheetah-복구/3_12_AI_클러스터_복구_2.md) | K8s 인증서 갱신 및 노드 동기화 |
+| [AI 클러스터 복구 3](docs/journal/1.cheetah-복구/3_12_AI_클러스터_복구_3.md) | Elasticsearch/Kibana 메모리 이슈 |
+| [AI 클러스터 복구 4](docs/journal/1.cheetah-복구/3_12_AI_클러스터_복구_4.md) | Kafka/Zookeeper 연동 이슈 |
+| [AI 클러스터 복구 5](docs/journal/1.cheetah-복구/3_12_AI_클러스터_복구_5.md) | MetalLB LoadBalancer 복구 |
+| [NAS 복구 1](docs/journal/1.cheetah-복구/3_16_NAS_복구_1.md) | RAID 재구성 및 드라이브 장애 해결 |
+| [NAS 복구 2](docs/journal/1.cheetah-복구/3_16_NAS_복구_2.md) | NFS 연결 및 K8s PV 복구 |
+| [HPE ACPI 장애](docs/journal/1.cheetah-복구/3_17_HPE_ACPI_장애.md) | 커널-펌웨어 호환성 문제 해결 |
+| [GPU 드라이버 업데이트 ⭐](docs/journal/1.cheetah-복구/3_19_GPU_드라이버_업데이트.md) | 재구축 결정의 근거가 된 핵심 판단 문서 |
 
 ### 2. GPU 클러스터 재구축
 
-| 문서                                                                  | 내용                           |
-| ------------------------------------------------------------------- | ---------------------------- |
-| [데이터 백업](./docs/2.GPU_클러스터_재구축/1_백업.md)                             | 레거시 시스템 데이터 NAS 아카이빙         |
-| [Ubuntu OS 재설치](./docs/2.GPU_클러스터_재구축/2_우분투_OS_재설치.md)              | LVM 제거, 고정 IP, 클린 설치         |
-| [K8s 엔진 설치](./docs/2.GPU_클러스터_재구축/3_K8s_엔진_설치.md)                   | Containerd, kubeadm, kubectl |
-| [K8s 클러스터 초기화](./docs/2.GPU_클러스터_재구축/4_K8s_클러스터_초기화.md)             | kubeadm init, Join Token 발급  |
-| [Calico CNI 설치](./docs/2.GPU_클러스터_재구축/5_Calico_CNI_설치.md)           | Pod 네트워크 구성                  |
-| [워커노드 구성 및 클러스터 합류](./docs/2.GPU_클러스터_재구축/6_워커_노드_구성_및_클러스터_합류.md)  | 6대 워커노드 원샷 설치 스크립트           |
-| [GPU 클러스터 완전 구축 가이드](./docs/2.GPU_클러스터_재구축/7_GPU_클러스터_완전_구축_가이드.md) | 전체 재구축 상세 가이드                |
+| 문서 | 내용 |
+| ---- | ---- |
+| [데이터 백업](docs/journal/2.GPU_클러스터_재구축/1_백업.md) | 레거시 시스템 데이터 NAS 아카이빙 |
+| [Ubuntu OS 재설치](docs/journal/2.GPU_클러스터_재구축/2_우분투_OS_재설치.md) | LVM 제거, 고정 IP, 클린 설치 |
+| [K8s 엔진 설치](docs/journal/2.GPU_클러스터_재구축/3_K8s_엔진_설치.md) | Containerd, kubeadm, kubectl |
+| [K8s 클러스터 초기화](docs/journal/2.GPU_클러스터_재구축/4_K8s_클러스터_초기화.md) | kubeadm init, Join Token 발급 |
+| [Calico CNI 설치](docs/journal/2.GPU_클러스터_재구축/5_Calico_CNI_설치.md) | Pod 네트워크 구성 |
+| [워커노드 구성 및 클러스터 합류](docs/journal/2.GPU_클러스터_재구축/6_워커_노드_구성_및_클러스터_합류.md) | 6대 워커노드 원샷 설치 스크립트 |
+| [GPU 클러스터 완전 구축 가이드](docs/journal/2.GPU_클러스터_재구축/7_GPU_클러스터_완전_구축_가이드.md) | 전체 재구축 상세 가이드 |
 
 ### 3. AI 팀 환경 구축
 
-| 문서                                                                                                                       | 내용                                                      |
-| -------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------- |
-| [RBAC + JupyterHub 구축 ⭐](./docs/3.AI_학습_팀_환경_구축/3_30_RBAC_Namespace_JupyterHub_구축.md)                          | RBAC 5명 계정 · JupyterHub · GPU 자동 배정 · CUDA 검증    |
-| [Grafana ServiceAccount 분리 및 보안 강화](./docs/3.AI_학습_팀_환경_구축/4_01_Grafana_ServiceAccount_분리_및_보안_강화.md) | grafana-sa 생성 · 최소 권한 원칙 적용                     |
-| [GPU 노드 10GbE 라우팅 최적화 ⭐](./docs/3.AI_학습_팀_환경_구축/4_02_GPU_노드_네트워크_최적화_10GbE_라우팅_설정.md)        | Pod 통신 경로 1GbE → 10GbE 우선 라우팅 · v100 케이블 교체 |
+| 문서 | 내용 |
+| ---- | ---- |
+| [RBAC + JupyterHub 구축 ⭐](docs/journal/3.AI_학습_팀_환경_구축/3_30_RBAC_Namespace_JupyterHub_구축.md) | RBAC 5명 계정 · JupyterHub · GPU 자동 배정 · CUDA 검증 |
+| [Grafana ServiceAccount 분리 및 보안 강화](docs/journal/3.AI_학습_팀_환경_구축/4_01_Grafana_ServiceAccount_분리_및_보안_강화.md) | grafana-sa 생성 · 최소 권한 원칙 적용 |
+| [GPU 노드 10GbE 라우팅 최적화 ⭐](docs/journal/3.AI_학습_팀_환경_구축/4_02_GPU_노드_네트워크_최적화_10GbE_라우팅_설정.md) | Pod 통신 경로 1GbE → 10GbE 우선 라우팅 · v100 케이블 교체 |
 
 ### 4. ML 파이프라인 구축
 
-| 문서                                                                                                                | 내용                                                            |
-| ----------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------- |
-| [YOLOv8 COCO 학습 및 웹캠 추론 ⭐](./docs/4.ML_파이프라인_구축/4_02_YOLOv8_COCO_학습_및_웹캠_추론_테스트.md)                               | K8s Job 파이프라인 · mAP@0.5 46.8% · 실시간 추론 성공                     |
-| [YOLOv8 VisDrone 멀티GPU 학습 Job ⭐](./docs/4.ML_파이프라인_구축/4_03_YOLOv8_VisDrone_멀티GPU_학습_Job.md)                       | V100 4장 DDP · VisDrone 드론 Object Detection 학습                 |
-| [YOLOv8 VisDrone 학습 결과 보고서](./docs/4.ML_파이프라인_구축/4_04_YOLOv8_VisDrone_학습_결과_보고서.md)                               | 학습 결과 분석 · mAP@0.5 33.4% · 소형 객체 한계 분석                        |
-| [Argo Workflows 설치 및 WorkflowTemplate 구성 ⭐](./docs/4.ML_파이프라인_구축/4_06_Argo_Workflows_설치_및_WorkflowTemplate_구성.md) | Helm 설치 · MetalLB UI 노출 · 팀원 웹 UI Job 제출 환경 완성                |
-| [Alertmanager 이메일 알람 구성 ⭐](./docs/4.ML_파이프라인_구축/4_07_Alertmanager_이메일_알람_구성.md)                                   | Gmail SMTP 연동 · GPU 온도/메모리/노드 다운 알람 3종 · 실제 수신 확인             |
-| [Argo DAG 파이프라인 구성 ⭐](./docs/4.ML_파이프라인_구축/4_07_Argo_DAG_파이프라인_구성.md)                                             | 데이터검증→학습→평가→버전별저장 4단계 · visdrone-v1.pt/v2.pt 버전 관리            |
-| [Argo Workflows Tailscale 접속 및 포트 변경](./docs/4.ML_파이프라인_구축/4_09_Argo_Workflows_Tailscale_접속_및_포트_변경.md)           | 포트 2746 → 30340 · systemd port-forward · Tailscale 외부 접속      |
-| [MLflow 설치 및 Argo DAG 연동 ⭐](./docs/4.ML_파이프라인_구축/4_13_MLflow_설치_및_Argo_DAG_연동.md)                                                      | PostgreSQL 백엔드 · params 105개 + metrics 자동 기록 · 버전별 모델 저장      |
-| [GitHub Actions CI/CD ⭐](./docs/4.ML_파이프라인_구축/4_13_GitHub_Actions_CICD.md)                                        | Self-hosted Runner · git push → Argo Workflow 자동 트리거 · 16s 완료 |
-| [etcd 백업 및 DR 검증 ⭐](./docs/4.ML_파이프라인_구축/4_13_etcd_백업_및_DR_검증.md)                                                    | 호스트 crontab 자동 백업 · NAS 저장 · snapshot 무결성 검증                  |
+| 문서 | 내용 |
+| ---- | ---- |
+| [YOLOv8 COCO 학습 및 웹캠 추론 ⭐](docs/journal/4.ML_파이프라인_구축/4_02_YOLOv8_COCO_학습_및_웹캠_추론_테스트.md) | K8s Job 파이프라인 · mAP@0.5 46.8% · 실시간 추론 성공 |
+| [YOLOv8 VisDrone 멀티GPU 학습 Job ⭐](docs/journal/4.ML_파이프라인_구축/4_03_YOLOv8_VisDrone_멀티GPU_학습_Job.md) | V100 4장 DDP · VisDrone 드론 Object Detection 학습 |
+| [YOLOv8 VisDrone 학습 결과 보고서](docs/journal/4.ML_파이프라인_구축/4_04_YOLOv8_VisDrone_학습_결과_보고서.md) | 학습 결과 분석 · mAP@0.5 33.4% · 소형 객체 한계 분석 |
+| [Argo Workflows 설치 및 WorkflowTemplate 구성 ⭐](docs/journal/4.ML_파이프라인_구축/4_06_Argo_Workflows_설치_및_WorkflowTemplate_구성.md) | Helm 설치 · MetalLB UI 노출 · 팀원 웹 UI Job 제출 환경 완성 |
+| [Alertmanager 이메일 알람 구성 ⭐](docs/journal/4.ML_파이프라인_구축/4_07_Alertmanager_이메일_알람_구성.md) | Gmail SMTP 연동 · GPU 온도/메모리/노드 다운 알람 3종 · 실제 수신 확인 |
+| [Argo DAG 파이프라인 구성 ⭐](docs/runbooks/runbook_argo_dag.md) | 데이터검증→학습→평가→버전별저장 4단계 · visdrone-v1.pt/v2.pt 버전 관리 |
+| [Argo Workflows Tailscale 접속 및 포트 변경](docs/journal/4.ML_파이프라인_구축/4_09_Argo_Workflows_Tailscale_접속_및_포트_변경.md) | 포트 2746 → 30500 · systemd port-forward · Tailscale 외부 접속 |
+| [MLflow 설치 및 Argo DAG 연동 ⭐](docs/journal/4.ML_파이프라인_구축/4_13_MLflow_설치_및_Argo_DAG_연동.md) | PostgreSQL 백엔드 · params 105개 + metrics 자동 기록 · 버전별 모델 저장 |
+| [GitHub Actions CI/CD ⭐](docs/journal/4.ML_파이프라인_구축/4_13_GitHub_Actions_CICD.md) | Self-hosted Runner · git push → Argo Workflow 자동 트리거 · 16s 완료 |
+| [etcd 백업 및 DR 검증 ⭐](docs/runbooks/runbook_etcd_restore.md) | 호스트 crontab 자동 백업 · NAS 저장 · snapshot 무결성 검증 |
 
-### 5. 트러블슈팅
+### 5. 장애 기록 (incidents)
 
-| 문서                                                                                                                     | 내용                                                                 |
-| ------------------------------------------------------------------------------------------------------------------------ | -------------------------------------------------------------------- |
-| [10G NIC 이전 ⭐](./docs/트러블슈팅/3_23_10G_NIC_이전.md)                                                                | 병목 발견 → 하드웨어 재배치 → 10G 개통                               |
-| [2080Ti GPU 미인식 ⭐](./docs/트러블슈팅/3_23_2080Ti_GPU_미인식.md)                                                      | 8장 중 1장 미인식 → 27장 확정 판단                                   |
-| [NAS NIC 접촉불량 ⭐](./docs/트러블슈팅/3_27_NAS_NIC_접촉불량.md)                                                        | rev ff 진단 → PCIe 재삽입 → 9.41Gbps 복구                            |
-| [Grafana DCGM No data](./docs/트러블슈팅/3_27_Grafana_DCGM_No_data.md)                                                   | ServiceMonitor 라벨 불일치 → json replace 패치                       |
-| [Portainer Tailscale 접속불가](./docs/트러블슈팅/3_27_Portainer_Tailscale_접속불가.md)                                   | port-forward 좀비 상태 → 서비스 재시작                               |
-| [JupyterHub 다중 접속 장애 및 서비스 재설계 ⭐](./docs/트러블슈팅/4_01_JupyterHub_다중_접속_장애_및_서비스_설계_개선.md) | port-forward 제거 · MetalLB IP 재설계 · 공용/관리자 접속 분리        |
-| [Alertmanager Silence — DaemonSet 오탐 억제](./docs/트러블슈팅/4_09_Alertmanager_Silence_DaemonSet_알람_억제.md)         | continuous-image-puller 오탐 분석 · PrometheusRule 대신 Silence 적용 |
+| 문서 | 내용 |
+| ---- | ---- |
+| [10G NIC 이전 ⭐](docs/incidents/3_23_10G_NIC_이전.md) | 병목 발견 → 하드웨어 재배치 → 10G 개통 |
+| [2080Ti GPU 미인식 ⭐](docs/incidents/3_23_2080Ti_GPU_미인식.md) | 8장 중 1장 미인식 → 27장 확정 판단 |
+| [NAS NIC 접촉불량 ⭐](docs/incidents/3_27_NAS_NIC_접촉불량.md) | rev ff 진단 → PCIe 재삽입 → 9.41Gbps 복구 |
+| [Grafana DCGM No data](docs/incidents/3_27_Grafana_DCGM_No_data.md) | ServiceMonitor 라벨 불일치 → json replace 패치 |
+| [Portainer Tailscale 접속불가](docs/incidents/3_27_Portainer_Tailscale_접속불가.md) | port-forward 좀비 상태 → 서비스 재시작 |
+| [네트워크 장애 및 클러스터 설계 개선 ⭐](docs/incidents/3_31_네트워크_장애_및_클러스터_설계_개선.md) | MetalLB ARP 충돌 · Calico 연쇄 장애 · IP Pool 재설계 |
+| [JupyterHub 다중 접속 장애 및 서비스 재설계 ⭐](docs/incidents/4_01_JupyterHub_다중_접속_장애_및_서비스_설계_개선.md) | port-forward 제거 · MetalLB IP 재설계 · 공용/관리자 접속 분리 |
+| [Grafana 대시보드 미표시 및 RBAC 권한 문제](docs/incidents/4_01_Grafana_대시보드_미표시_및_RBAC_권한_문제.md) | 물리 네트워크 단절 + RBAC 권한 부족 동시 진단 |
+| [Alertmanager Silence — DaemonSet 오탐 억제](docs/incidents/4_09_Alertmanager_Silence_DaemonSet_알람_억제.md) | continuous-image-puller 오탐 분석 · PrometheusRule 대신 Silence 적용 |
