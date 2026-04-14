@@ -538,14 +538,14 @@ kubectl patch svc proxy-public -n ai-team \
 
 ### 5. 장애 기록 (incidents)
 
-| 문서 | 내용 |
-| ---- | ---- |
-| [10G NIC 이전 ⭐](docs/incidents/3_23_10G_NIC_이전.md) | 병목 발견 → 하드웨어 재배치 → 10G 개통 |
-| [2080Ti GPU 미인식 ⭐](docs/incidents/3_23_2080Ti_GPU_미인식.md) | 8장 중 1장 미인식 → 27장 확정 판단 |
-| [NAS NIC 접촉불량 ⭐](docs/incidents/3_27_NAS_NIC_접촉불량.md) | rev ff 진단 → PCIe 재삽입 → 9.41Gbps 복구 |
-| [Grafana DCGM No data](docs/incidents/3_27_Grafana_DCGM_No_data.md) | ServiceMonitor 라벨 불일치 → json replace 패치 |
-| [Portainer Tailscale 접속불가](docs/incidents/3_27_Portainer_Tailscale_접속불가.md) | port-forward 좀비 상태 → 서비스 재시작 |
-| [네트워크 장애 및 클러스터 설계 개선 ⭐](docs/incidents/3_31_네트워크_장애_및_클러스터_설계_개선.md) | MetalLB ARP 충돌 · Calico 연쇄 장애 · IP Pool 재설계 |
-| [JupyterHub 다중 접속 장애 및 서비스 재설계 ⭐](docs/incidents/4_01_JupyterHub_다중_접속_장애_및_서비스_설계_개선.md) | port-forward 제거 · MetalLB IP 재설계 · 공용/관리자 접속 분리 |
-| [Grafana 대시보드 미표시 및 RBAC 권한 문제](docs/incidents/4_01_Grafana_대시보드_미표시_및_RBAC_권한_문제.md) | 물리 네트워크 단절 + RBAC 권한 부족 동시 진단 |
+| 문서                                                                                                    | 내용                                                           |
+| ----------------------------------------------------------------------------------------------------- | ------------------------------------------------------------ |
+| [10G NIC 이전 ⭐](docs/incidents/3_23_10G_NIC_이전.md)                                                     | 병목 발견 → 하드웨어 재배치 → 10G 개통                                    |
+| [2080Ti GPU 미인식 ⭐](docs/incidents/3_23_2080Ti_GPU_미인식.md)                                             | 8장 중 1장 미인식 → 27장 확정 판단                                      |
+| [NAS NIC 접촉불량 ⭐](docs/incidents/3_27_NAS_NIC_접촉불량.md)                                                 | rev ff 진단 → PCIe 재삽입 → 9.41Gbps 복구                           |
+| [Grafana DCGM No data](docs/incidents/3_27_Grafana_DCGM_No_data.md)                                   | ServiceMonitor 라벨 불일치 → json replace 패치                      |
+| [Portainer Tailscale 접속불가](docs/incidents/3_27_Portainer_Tailscale_접속불가.md)                           | port-forward 좀비 상태 → 서비스 재시작                                 |
+| [네트워크 장애 및 클러스터 설계 개선 ⭐](docs/incidents/3_31_네트워크_장애_및_클러스터_설계_개선.md)                                 | MetalLB ARP 충돌 · Calico 연쇄 장애 · IP Pool 재설계                  |
+| [JupyterHub 다중 접속 장애 및 서비스 재설계 ⭐](docs/incidents/4_01_JupyterHub_다중_접속_장애_및_서비스_설계_개선.md)             | port-forward 제거 · MetalLB IP 재설계 · 공용/관리자 접속 분리              |
+| [Grafana 대시보드 미표시 및 RBAC 권한 문제](docs/incidents/4_01_Grafana_대시보드_미표시_및_RBAC_권한_문제.md)                 | 물리 네트워크 단절 + RBAC 권한 부족 동시 진단                                |
 | [Alertmanager Silence — DaemonSet 오탐 억제](docs/incidents/4_09_Alertmanager_Silence_DaemonSet_알람_억제.md) | continuous-image-puller 오탐 분석 · PrometheusRule 대신 Silence 적용 |

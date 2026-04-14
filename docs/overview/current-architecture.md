@@ -61,16 +61,16 @@
 
 ## 서비스 현황
 
-| 서비스 | 네임스페이스 | 접속 주소 | 상태 |
-|---|---|---|---|
-| JupyterHub | ai-team | `http://TAILSCALE-IP:8000` | ✅ |
-| Argo Workflows UI | argo | `http://TAILSCALE-IP:2746` | ✅ |
-| MLflow | mlflow | `http://TAILSCALE-IP:30010` | ✅ |
-| FastAPI 서빙 (YOLOv8) | ai-team | `http://TAILSCALE-IP:30600` | ✅ |
-| Grafana | monitoring | `http://TAILSCALE-IP:3000` | ✅ |
-| Prometheus | monitoring | `http://TAILSCALE-IP:9090` | ✅ |
-| Portainer | portainer | `https://MASTER-IP:9443` | ✅ |
-| Filebrowser (NAS) | monitoring | `http://TAILSCALE-IP:30340` | ✅ |
+| 서비스                 | 네임스페이스     | 접속 주소                       | 상태  |
+| ------------------- | ---------- | --------------------------- | --- |
+| JupyterHub          | ai-team    | `http://TAILSCALE-IP:30000` | ✅   |
+| MLflow              | mlflow     | `http://TAILSCALE-IP:30010` | ✅   |
+| Grafana             | monitoring | `http://TAILSCALE-IP:30300` | ✅   |
+| Prometheus          | monitoring | `http://TAILSCALE-IP:30310` | ✅   |
+| Portainer           | portainer  | `http://TAILSCALE-IP:30320` | ✅   |
+| Filebrowser (NAS)   | monitoring | `http://TAILSCALE-IP:30340` | ✅   |
+| Argo Workflows UI   | argo       | `http://TAILSCALE-IP:30500` | ✅   |
+| FastAPI 서빙 (YOLOv8) | ai-team    | `http://TAILSCALE-IP:30600` | ✅   |
 
 ---
 
@@ -81,7 +81,7 @@
 - **인증:** DummyAuthenticator (현재) → GitHub OAuth 교체 예정
 - **GPU 스케줄링:** V100 / 2080Ti 자동 배정 (nodeSelector + label)
 - **팀원 계정:** member-01 ~ member-05 (RBAC, ai-team 네임스페이스 격리)
-- **접속:** Tailscale → `http://TAILSCALE-IP:8000`
+- **접속:** Tailscale → `http://TAILSCALE-IP:30000`
 
 ---
 

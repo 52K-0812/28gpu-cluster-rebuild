@@ -29,9 +29,9 @@
 
 ```
 [master-01 (151)]
-    │  1G 관리망 (<MASTER-IP>)
+    │  1G 관리망 (MASTER-IP)
     │  → NFS 제어, K8s API, 일반 통신
-    └──→ NAS (<MASTER-IP>)
+    └──→ NAS (MASTER-IP)
 
 [GPU 노드 (153~156)]
     │  10G 데이터망 (10.10.10.x)
@@ -39,7 +39,7 @@
     └──→ NAS (10.10.10.157)
 ```
 
-> **핵심 설계:** master-01은 1G망만 있으므로 NFS Provisioner는 1G 주소(<MASTER-IP>)로 제어하고, GPU 노드는 10G망(10.10.10.157)으로 데이터 직접 접근
+> **핵심 설계:** master-01은 1G망만 있으므로 NFS Provisioner는 1G 주소(MASTER-IP)로 제어하고, GPU 노드는 10G망(10.10.10.157)으로 데이터 직접 접근
 
 ---
 
@@ -100,7 +100,7 @@ sudo apt update
 sudo apt install -y nfs-kernel-server
 
 # 1G 관리망 대역 허용
-echo "/data <MASTER-IP>/24(rw,sync,no_subtree_check,no_root_squash)" | sudo tee -a /etc/exports
+echo "/data MASTER-IP/24(rw,sync,no_subtree_check,no_root_squash)" | sudo tee -a /etc/exports
 
 # 10G 데이터망 대역 허용
 echo "/data 10.10.10.157/24(rw,sync,no_subtree_check,no_root_squash)" | sudo tee -a /etc/exports
@@ -126,7 +126,7 @@ sudo exportfs -v
 ### 1-1. NAS 10G NIC 확인
 
 ```bash
-# NAS (<MASTER-IP>) 접속 후 실행
+# NAS (MASTER-IP) 접속 후 실행
 lspci | grep -i ether        # Broadcom BCM57810 확인
 ip link show                  # 인터페이스 이름 확인 (enp2s0f0)
 sudo ethtool enp2s0f0 | grep Speed  # Speed: 10000Mb/s 확인
@@ -148,12 +148,12 @@ network:
   ethernets:
     eno1:
       addresses:
-        - <MASTER-IP>/24
+        - MASTER-IP/24
       nameservers:
         addresses: [8.8.8.8, 8.8.4.4]
       routes:
         - to: default
-          via: <MASTER-IP>
+          via: MASTER-IP
     enp2s0f0: # eno2 아님! 반드시 ip link show 로 확인한 이름 사용
       addresses:
         - 10.10.10.157/24
@@ -179,12 +179,12 @@ network:
   ethernets:
     enp2s0f0: # 1G 관리망 인터페이스 (DGX Station)
       addresses:
-        - <MASTER-IP>/24
+        - MASTER-IP/24
       nameservers:
         addresses: [8.8.8.8, 8.8.4.4]
       routes:
         - to: default
-          via: <MASTER-IP>
+          via: MASTER-IP
     enp2s0f1: # 10G 데이터망 인터페이스 (DGX Station)
       addresses:
         - 10.10.10.153/24
@@ -268,7 +268,7 @@ kubectl apply -f https://raw.githubusercontent.com/projectcalico/calico/v3.27.0/
 kubeadm token create --print-join-command
 
 # 각 워커 노드에서 실행
-sudo kubeadm join <MASTER-IP>:6443 --token [토큰] --discovery-token-ca-cert-hash [해시]
+sudo kubeadm join MASTER-IP:6443 --token [토큰] --discovery-token-ca-cert-hash [해시]
 ```
 
 ---
@@ -288,12 +288,12 @@ helm repo update
 
 > **중요:** NFS Provisioner는 반드시 master-01에 배치해야 함.
 > master-02는 10G망 없음 → 10.10.10.157 연결 불가.
-> NFS Provisioner 제어는 1G 주소(<MASTER-IP>) 사용.
+> NFS Provisioner 제어는 1G 주소(MASTER-IP) 사용.
 
 ```bash
 helm install nfs-provisioner \
   nfs-subdir-external-provisioner/nfs-subdir-external-provisioner \
-  --set nfs.server=<MASTER-IP> \
+  --set nfs.server=MASTER-IP \
   --set nfs.path=/data \
   --set storageClass.name=nfs-client \
   --set storageClass.defaultClass=true \
@@ -304,7 +304,7 @@ helm install nfs-provisioner \
 ### 3-3. 워커 노드 전체 nfs-common 설치
 
 ```bash
-for node in 112.76.56.152 112.76.56.153 112.76.56.154 112.76.56.155 112.76.56.156; do
+for node in xxx.xxx.xxx.152 xxx.xxx.xxx.153 xxx.xxx.xxx.154 xxx.xxx.xxx.155 xxx.xxx.xxx.156; do
   ssh ubuntu@$node "sudo apt install -y nfs-common"
 done
 ```
@@ -518,7 +518,7 @@ metadata:
   namespace: metallb-system
 spec:
   addresses:
-  - <MASTER-IP>/32
+  - MASTER-IP/32
 ---
 apiVersion: metallb.io/v1beta1
 kind: L2Advertisement
@@ -557,17 +557,17 @@ sudo tailscale up
 
 | 서비스     | 주소                       |
 | ---------- | -------------------------- |
-| Portainer  | https://<MASTER-IP>:9443 |
-| Grafana    | http://<MASTER-IP>:3000  |
-| Prometheus | http://<MASTER-IP>:9090  |
+| Portainer  | https://MASTER-IP:9443 |
+| Grafana    | http://MASTER-IP:3000  |
+| Prometheus | http://MASTER-IP:9090  |
 
 **접속 주소 (내부망 직접):**
 
 | 서비스     | 주소                                   |
 | ---------- | -------------------------------------- |
-| Portainer  | https://<MASTER-IP>:9443 |
-| Grafana    | http://<MASTER-IP>:3000  |
-| Prometheus | http://<MASTER-IP>:9090  |
+| Portainer  | https://MASTER-IP:9443 |
+| Grafana    | http://MASTER-IP:3000  |
+| Prometheus | http://MASTER-IP:9090  |
 
 ---
 
@@ -640,7 +640,7 @@ kubectl delete job gpu-test-v100 gpu-test-2080ti
 
 ```bash
 # 전체 노드 일괄 테스트 (NAS에서 iperf3 -s 실행 후)
-for node in 112.76.56.153 112.76.56.154 112.76.56.155 112.76.56.156; do
+for node in xxx.xxx.xxx.153 xxx.xxx.xxx.154 xxx.xxx.xxx.155 xxx.xxx.xxx.156; do
   echo "=== $node ==="
   ssh ubuntu@$node "iperf3 -c 10.10.10.157"
 done
@@ -707,7 +707,7 @@ sudo netplan apply
 | -------- | --------------------------------------------------------------------------------------------- |
 | **증상** | PVC Pending, `mount.nfs: Connection timed out`                                                |
 | **원인** | NFS Provisioner가 10G망 없는 master-02에 배치됨                                               |
-| **해결** | `nodeSelector`로 master-01에 강제 배치 + NFS 서버 주소를 1G망(<MASTER-IP>) 사용 |
+| **해결** | `nodeSelector`로 master-01에 강제 배치 + NFS 서버 주소를 1G망(MASTER-IP) 사용 |
 
 ---
 
@@ -722,9 +722,9 @@ sudo netplan apply
 
 **망 분리 운영 원칙:**
 
-- master(151) → NAS 제어: `<MASTER-IP>` (1G)
+- master(151) → NAS 제어: `MASTER-IP` (1G)
 - GPU 노드(153~156) → 데이터 전송: `10.10.10.157` (10G)
-- NFS Provisioner 설정: 반드시 `<MASTER-IP>` (1G 주소) 사용
+- NFS Provisioner 설정: 반드시 `MASTER-IP` (1G 주소) 사용
 
 ---
 
@@ -773,9 +773,9 @@ helm list -A
 
 | 서비스            | 타입                     | 접속 주소                              | 상태 |
 | ----------------- | ------------------------ | -------------------------------------- | ---- |
-| Portainer         | LoadBalancer             | https://<MASTER-IP>:9443 | ✅   |
-| Grafana           | ClusterIP + port-forward | http://<MASTER-IP>:3000  | ✅   |
-| Prometheus        | ClusterIP + port-forward | http://<MASTER-IP>:9090  | ✅   |
+| Portainer         | LoadBalancer             | https://MASTER-IP:9443 | ✅   |
+| Grafana           | ClusterIP + port-forward | http://MASTER-IP:3000  | ✅   |
+| Prometheus        | ClusterIP + port-forward | http://MASTER-IP:9090  | ✅   |
 | NFS StorageClass  | -                        | nfs-client (default)                   | ✅   |
 | DCGM GPU 모니터링 | -                        | Grafana Dashboard #12239               | ✅   |
 | 10G 데이터망      | -                        | 전 GPU 노드 ~9Gbps                     | ✅   |
