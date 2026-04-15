@@ -62,7 +62,7 @@ FastAPI /predict → MLflow alias 조회 → NAS 파일 로드 → 추론
     └→ alias "champion" 조회 → version 번호 확인
     └→ version 번호로 NAS 파일명 매핑: visdrone-v{version}.pt
     └→ NAS 파일 직접 로드 (1순위)
-    └→ MLflow artifact 경로 폴백 (2순위)
+    └→ MLflow artifact 경로 폴백 (2순위, 예비 경로)
     └→ YOLO 추론 → 결과 반환
 
 ※ /reload-champion 호출 시 재시작 없이 최신 champion 반영 가능
@@ -95,8 +95,8 @@ client.transition_model_version_stage("visdrone-yolov8", version, "Production")
 client.set_registered_model_alias("visdrone-yolov8", "champion", version)
 ```
 
-alias "champion"을 새 version으로 바꾸면 FastAPI가 다음 로드 시점에 새 모델을 반영한다.
-`/reload-champion` 엔드포인트를 호출하면 Pod 재시작 없이 즉시 반영 가능하다.
+alias "champion"을 새 version으로 바꾸면 FastAPI는 다음 모델 로드 시점에 해당 version을 반영한다.  
+현재 구현에서는 `/reload-champion` 호출 또는 Pod 재시작을 통해 이를 즉시 반영할 수 있다.
 
 ### 3.3 mlflow.register_model() 대신 create_model_version() 사용
 
@@ -131,16 +131,24 @@ model = YOLO(nas_path)  # ← YOLO API 완전 호환
 
 **champion version → NAS 파일명 매핑 구조:**
 
-현재 서빙은 MLflow alias가 가리키는 model version 번호를 기준으로
-`/mnt/datasets/models/visdrone-v{version}.pt` 파일명을 매핑해 로드한다.
+현재 구현은 MLflow alias가 가리키는 model version 번호를 기준으로  
+`/mnt/datasets/models/visdrone-v{version}.pt` 파일명을 매핑해 로드한다.  
+  
+다만 MLflow Registry version 번호와 Argo의 `model-version` 파라미터는  
+원래 별개 체계이므로, 이 방식은 현재 환경에서 동작하는 임시 규칙에 가깝다.  
+장기적으로는 NAS 파일 경로를 별도 메타데이터로 저장하거나,  
+Registry version과 파일명을 명시적으로 연결하는 방식으로 개선이 필요하다.
 
 ```
-MLflow alias "champion" → version 3
-NAS 파일: /mnt/datasets/models/visdrone-v3.pt
+MLflow alias "champion" → version 4
+NAS 파일: /mnt/datasets/models/visdrone-v4.pt
 ```
 
-이 매핑이 유효하려면 save-model 단계에서 NAS에 파일을 복사할 때
-반드시 `visdrone-v{model-version 파라미터}.pt` 형식을 유지해야 한다.
+현재 구현이 안정적으로 동작하려면,  
+MLflow Registry version 번호와 NAS 파일명이 우연히 일치하는 현재 운영 규칙이 유지되어야 한다.  
+  
+다만 Registry version과 Argo의 `model-version` 파라미터는 본래 별개 체계이므로,  
+장기적으로는 save-model 단계에서 Registry version과 NAS 파일 경로를 명시적으로 연결하는 메타데이터 저장 방식으로 개선이 필요하다.
 
 ### 3.5 PVC 네임스페이스 격리 문제
 
@@ -169,9 +177,8 @@ spec:
 - `run_id` NAS 파일 저장 유지
 
 **evaluate 단계:**
-- `command: [python, -c]` → `command: [sh, -c]` + pip install 추가
-- `mlflow.log_metrics()` 유지
-- `mlflow.log_artifact(best_pt, artifact_path="weights")` 명시적 추가
+- mAP metrics 기록  
+- `best.pt`를 MLflow artifact로 기록하도록 로직 추가
 
 **save-model 단계:**
 - `image: busybox` → `image: ultralytics/ultralytics:8.1.0` 교체 (mlflow 설치 필요)
@@ -182,16 +189,18 @@ spec:
 ### 4.2 FastAPI ConfigMap (yolov8-serving-code)
 
 - `load_champion_model()` 함수 신규 추가
+- champion 모델 로드 방식을 MLflow artifact 직접 경로 의존에서 **NAS 우선 로드 + artifact 폴백** 구조로 변경
 - `/predict-demo` 엔드포인트 신규 (COCO, 기존 /predict 역할)
 - `/predict` 엔드포인트 → champion 모델 서빙으로 교체
 - `/reload-champion` 엔드포인트 신규 (핫 리로드)
 - `/health` 응답에 `champion_ready`, `champion_version` 추가
+- `/` 루트 페이지를 단순 안내 문구에서 웹 UI(파일 업로드 + 웹캠 캡처 + 엔드포인트 선택 + 결과 표시)로 확장
 
 ### 4.3 FastAPI Deployment
 
 - `mlflow-artifacts-pvc` 볼륨 마운트 추가 (`/mnt/mlflow-artifacts`)
-- `pip install` 목록에 `mlflow psycopg2-binary` 추가
-- liveness/readiness probe 추가 (`initialDelaySeconds: 120`)
+- `nfs-datasets-pvc` 볼륨 마운트 추가 (`/mnt/datasets`)
+- serving Pod가 NAS 저장 모델 파일(`/mnt/datasets/models/visdrone-v{version}.pt`)을 직접 읽을 수 있도록 볼륨 구조 수정
 
 ### 4.4 신규 PV/PVC
 
@@ -253,12 +262,12 @@ kubectl delete pv mlflow-artifacts-pv-aiteam --force
 
 ### 6.1 DAG 완주 확인
 
-| 단계 | 상태 | 결과 |
-|---|---|---|
-| validate-data | ✅ Succeeded | 데이터셋 확인 |
-| train | ✅ Succeeded | MLflow params 기록 |
-| evaluate | ✅ Succeeded | mAP@0.5 기록 + artifact 등록 |
-| save-model | ✅ Succeeded | NAS 저장 + Registry 등록 + champion 지정 |
+| 단계            | 상태          | 결과                                 |
+| ------------- | ----------- | ---------------------------------- |
+| validate-data | ✅ Succeeded | 데이터셋 확인                            |
+| train         | ✅ Succeeded | MLflow params 기록                   |
+| evaluate      | ✅ Succeeded | mAP@0.5 기록 + artifact 기록 로직 실행     |
+| save-model    | ✅ Succeeded | NAS 저장 + Registry 등록 + champion 지정 |
 
 ### 6.2 FastAPI 상태
 
@@ -271,7 +280,7 @@ curl http://TAILSCALE-IP:30600/health
   "status": "ok",
   "demo_model": "yolov8n-coco",
   "champion_ready": true,
-  "champion_version": "3"
+  "champion_version": "4"
 }
 ```
 
@@ -279,9 +288,17 @@ curl http://TAILSCALE-IP:30600/health
 
 ```
 ✅ COCO demo 모델 로드 완료
-✅ champion v3 NAS 로드 완료: /mnt/datasets/models/visdrone-v3.pt
+✅ champion v4 NAS 로드 완료: /mnt/datasets/models/visdrone-v4.pt
 INFO:     Application startup complete.
 ```
+
+### 6.4 웹 UI 동작 확인
+
+![YOLOv8 Serving UI](../../images/4_15_yolov8_serving_ui.png)
+
+- 웹캠 캡처 → /predict-demo (COCO) 추론 성공
+- chair 86%, bottle 31%, tv 39%, person 39% 탐지
+- 헤더 상태: COCO · 80cls ✅ / champion · v4 ✅
 
 ---
 

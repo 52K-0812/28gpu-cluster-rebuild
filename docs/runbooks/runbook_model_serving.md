@@ -9,17 +9,18 @@
 
 ## 현재 배포 대상
 
-| 항목 | 내용 |
-|---|---|
-| 모델 | YOLOv8n COCO pretrained (80 클래스) |
-| 베이스 이미지 | `ultralytics/ultralytics:8.1.0` |
-| 배포 노드 | 2080ti-gpu-04 (`WORKER-IP-06`, `gpu-type: 2080ti` nodeSelector) |
-| GPU | 2080Ti × 1 |
-| 추론 속도 | 77ms |
-| 접속 | `http://TAILSCALE-IP:30600` (Tailscale) |
-| 엔드포인트 | `GET /` 웹 UI · `POST /predict` 추론 · `GET /health` 헬스체크 |
+| 항목          | 내용                                                            |
+| ------------- | --------------------------------------------------------------- |
+| 모델          | YOLOv8n COCO pretrained (80 클래스)                             |
+| 베이스 이미지 | `ultralytics/ultralytics:8.1.0`                                 |
+| 배포 노드     | 2080ti-gpu-04 (`WORKER-IP-06`, `gpu-type: 2080ti` nodeSelector) |
+| GPU           | 2080Ti × 1                                                      |
+| 추론 속도     | 77ms                                                            |
+| 접속          | `http://TAILSCALE-IP:30600` (Tailscale)                         |
+| 엔드포인트    | `GET /` 웹 UI · `POST /predict` 추론 · `GET /health` 헬스체크   |
 
 **서빙 구조:**
+
 ```
 [브라우저]
     │ 웹캠 캡처 or 이미지 업로드
@@ -224,21 +225,23 @@ kubectl delete configmap yolov8-serving-code -n ai-team
 kubectl describe pod -n ai-team -l app=yolov8-serving | tail -20
 ```
 
-| 증상 | 원인 | 조치 |
-|---|---|---|
-| `ContainerCreating` 10분 이상 | 이미지 풀링 중 (10GB) | 대기. Events에 `Pulling image` 확인 |
-| `OOMKilled` | GPU 메모리 부족 | 다른 2080Ti Pod 점유 확인 후 정리 |
-| `Pending` | 2080ti 노드 GPU 자원 없음 | `kubectl get pods -n ai-team -o wide`로 점유 Pod 확인 |
-| `CrashLoopBackOff` | pip install 실패 또는 코드 오류 | `kubectl logs`로 오류 메시지 확인 |
+| 증상                          | 원인                            | 조치                                                  |
+| ----------------------------- | ------------------------------- | ----------------------------------------------------- |
+| `ContainerCreating` 10분 이상 | 이미지 풀링 중 (10GB)           | 대기. Events에 `Pulling image` 확인                   |
+| `OOMKilled`                   | GPU 메모리 부족                 | 다른 2080Ti Pod 점유 확인 후 정리                     |
+| `Pending`                     | 2080ti 노드 GPU 자원 없음       | `kubectl get pods -n ai-team -o wide`로 점유 Pod 확인 |
+| `CrashLoopBackOff`            | pip install 실패 또는 코드 오류 | `kubectl logs`로 오류 메시지 확인                     |
 
 ### 웹캠 접근 불가 (HTTP 환경)
 
 브라우저 `getUserMedia()` API는 HTTPS 또는 localhost에서만 동작한다. HTTP 접속 시 카메라 권한이 차단된다.
 
 **임시 해결 (Chrome 플래그):**
+
 ```
 chrome://flags/#unsafely-treat-insecure-origin-as-secure
 ```
+
 `http://TAILSCALE-IP:30600` 추가 → Enabled → Chrome 재시작
 
 > **근본 해결:** Ingress + TLS 적용 (미완료, 다음 작업 예정)

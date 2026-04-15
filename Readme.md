@@ -16,7 +16,7 @@
 
 | 항목     | 내용                                                                    |
 | -------- | ----------------------------------------------------------------------- |
-| **기간** | 2026년 3월 12일 ~ 4월 13일 (약 5주)                                     |
+| **기간** | 2026년 3월 12일 ~ 4월 15일 (약 5주)                                     |
 | **역할** | 단독 수행 (시스템 복구 · 인프라 설계 · ML 파이프라인 구축 전 과정)      |
 | **환경** | 학교 서버실 온프레미스 GPU 클러스터                                     |
 | **목표** | 방치된 GPU 클러스터를 AI 학습 파이프라인이 동작하는 MLOps 인프라로 전환 |
@@ -209,6 +209,15 @@
               └ [GitHub Actions] 프라이빗 레포(28gpu-cluster-cicd) + Self-hosted Runner 구성
               └ [GitHub Actions] git push → 16초 내 Argo cicd-pipeline 자동 트리거 확인
               └ [GitHub Actions] workflow_dispatch로 epochs/batch/version 수동 파라미터 입력 지원
+
+4월 15일  ──  MLflow alias + FastAPI 운영 서빙 연결 + 웹 UI 구축 ⭐
+              └ [MLflow] Model Registry alias "champion" 기반 버전 관리 적용
+              └ [Argo DAG] evaluate 단계에 best.pt artifact 연동 로직 추가
+              └ [FastAPI] /predict-demo(COCO) / /predict(champion) 엔드포인트 분리
+              └ [FastAPI] NAS 저장 모델 파일 우선 로드 + artifact 경로 폴백 구조 적용
+              └ [FastAPI] /reload-champion 으로 재시작 없는 수동 반영 가능
+              └ [UI] 루트(/) 페이지에 파일 업로드 · 웹캠 캡처 · 결과 시각화 웹 UI 추가
+              └ [검증] champion v4 NAS 로드 확인 · /health 정상 응답 · 웹 UI 추론 성공
 ```
 
 ---
@@ -395,7 +404,7 @@ kubectl patch svc proxy-public -n ai-team \
 | ML 학습       | YOLOv8 COCO mAP@0.5 46.8% / VisDrone mAP@0.5 33.4% (V100 4장 DDP)   |
 | 알람          | GPU 온도/메모리/노드 다운 3종 → Gmail 자동 통보                     |
 | 워크플로우    | Argo Workflows — 팀원 웹 UI로 학습 Job 제출 가능                    |
-| MLflow        | 실험 추적 · params 105개 + metrics 7개 자동 기록 · 버전별 모델 저장 |
+| MLflow        | 실험 추적 · params 105개 + metrics 자동 기록 · Registry alias(champion) 기반 버전 관리 |
 | 복구 기간     | **약 5주** (3/12 ~ 4/13)                                            |
 
 ![자료사진](./docs/images/스크린샷_2026-03-30_172818.png)
@@ -419,7 +428,8 @@ kubectl patch svc proxy-public -n ai-team \
 - [x] GitHub Actions CI/CD — 코드 push → 자동 Argo Workflow 트리거
 - [x] FastAPI 모델 서빙 — K8s Deployment로 /predict 엔드포인트 배포 (77ms, 2080Ti GPU)
 - [x] Filebrowser — NAS 웹 파일 탐색기 배포 (monitoring 네임스페이스)
-- [ ] MLflow alias + FastAPI 엔드포인트 분리 — predict-demo(COCO),predict(champion alias) 분리
+- [x] MLflow alias + FastAPI 엔드포인트 분리 — /predict-demo(COCO), /predict(champion) 분리 + NAS 우선 로드 구조 적용
+- [x] FastAPI 웹 UI 구축 — 파일 업로드 / 웹캠 캡처 / 결과 시각화 페이지 추가
 - [ ] Serving 이미지화 — pip install 제거, 컨테이너 이미지 빌드 및 레지스트리 등록
 - [ ] Canary 배포 — 모델 버전 간 트래픽 점진적 전환
 - [ ] Ingress + TLS — HTTPS 적용 (웹캠 getUserMedia 제약 해소)
@@ -461,7 +471,9 @@ kubectl patch svc proxy-public -n ai-team \
 │       ├── 📄 4_09_Argo_Workflows_Tailscale_접속_및_포트_변경
 │       ├── 📄 4_13_MLflow_설치_및_Argo_DAG_연동
 │       ├── 📄 4_13_GitHub_Actions_CICD
-│       └── 📄 4_13_FastAPI_YOLOv8_모델_서빙
+│       ├── 📄 4_13_FastAPI_YOLOv8_모델_서빙
+│       └── 📄 4_15_MLflow_alias_FastAPI_엔드포인트_분리
+
 │
 ├── 📁 runbooks/                         # 운영 절차 · 복구 매뉴얼
 │   ├── 📄 runbook_etcd_restore.md       # etcd 백업 · 스냅샷 복원 DR 검증
@@ -536,6 +548,7 @@ kubectl patch svc proxy-public -n ai-team \
 | [Argo Workflows Tailscale 접속 및 포트 변경](docs/journal/4.ML_파이프라인_구축/4_09_Argo_Workflows_Tailscale_접속_및_포트_변경.md) | 포트 2746 → 30500 · systemd port-forward · Tailscale 외부 접속 |
 | [MLflow 설치 및 Argo DAG 연동 ⭐](docs/journal/4.ML_파이프라인_구축/4_13_MLflow_설치_및_Argo_DAG_연동.md) | PostgreSQL 백엔드 · params 105개 + metrics 자동 기록 · 버전별 모델 저장 |
 | [GitHub Actions CI/CD ⭐](docs/journal/4.ML_파이프라인_구축/4_13_GitHub_Actions_CICD.md) | Self-hosted Runner · git push → Argo Workflow 자동 트리거 · 16s 완료 |
+| [MLflow alias + FastAPI 엔드포인트 분리 ⭐](docs/journal/4.ML_파이프라인_구축/4_15_MLflow_alias_FastAPI_엔드포인트_분리.md) | Registry alias(champion) · NAS 우선 로드 · /predict-demo / /predict 분리 · 웹 UI 구축 |
 | [etcd 백업 및 DR 검증 ⭐](docs/runbooks/runbook_etcd_restore.md) | 호스트 crontab 자동 백업 · NAS 저장 · snapshot 무결성 검증 |
 
 ### 5. 장애 기록 (incidents)

@@ -104,7 +104,7 @@
                                     alias "champion" 지정
                                            │
                                            ▼
-                                    FastAPI /predict 자동 반영
+                                    FastAPI /predict 반영
 
 [학습 환경]
     - 모델: YOLOv8n
@@ -121,7 +121,7 @@
 - **Artifact 저장소:** NFS PVC → NAS `/data/mlflow-artifacts/`
 - **Argo 연동:**
   - train 단계: `mlflow.log_params()` (autolog — 105개 자동 기록)
-  - evaluate 단계: `mlflow.log_metrics()` + `best.pt` artifact 등록
+  - evaluate 단계: `mlflow.log_metrics()` + `best.pt` artifact 연동 로직 추가
   - save-model 단계: Registry 등록 + alias "champion" 지정
 - **Model Registry:** `visdrone-yolov8` 모델명, alias 기반 버전 관리
 - **접속:** `http://TAILSCALE-IP:30010`
@@ -144,18 +144,26 @@
 | `POST /reload-champion` | — | Pod 재시작 없이 최신 champion 반영 |
 | `GET /health` | — | 서버 상태 + champion 버전 확인 |
 
+### 웹 UI
+
+- 루트(`/`) 페이지에 웹 UI 제공
+- 파일 업로드 / 웹캠 캡처 모드 지원
+- `/predict-demo` / `/predict` 엔드포인트 선택 가능
+- 헤더 상태 배지로 `COCO · 80cls` / `champion · v4` 표시
+- 추론 결과 이미지, 탐지 카드, confidence bar 표시
+
 ### champion 모델 로드 방식
 
 ```
 MLflow alias "champion" 조회
-    └→ version 번호 확인 (현재 v3)
+    └→ version 번호 확인 (현재 v4)
     └→ 1순위: NAS /mnt/datasets/models/visdrone-v{version}.pt 직접 로드
-    └→ 2순위: MLflow artifact 경로 폴백
+    └→ 2순위: MLflow artifact 경로 폴백 (예비 경로)
 ```
 
 > **설계 원칙:** MLflow Model Registry는 alias/version 관리에 사용하고, 실제 서빙 모델 로드는 NAS 저장 모델 파일을 1순위로 사용한다. MLflow artifact 경로는 현재 폴백 용도로만 유지한다.
 
-> **반영 방식:** FastAPI /predict는 MLflow alias "champion"의 version을 조회한 뒤, 해당 version에 대응하는 NAS 모델 파일을 로드하도록 구성했다. 필요 시 /reload-champion 엔드포인트로 재시작 없이 반영 가능하다.
+> **반영 방식:** FastAPI /predict는 MLflow alias "champion"의 version을 조회한 뒤, 해당 version에 대응하는 NAS 모델 파일을 로드하도록 구성했다. alias 변경만으로 즉시 반영되는 것은 아니며, 필요 시 `/reload-champion` 엔드포인트 호출 또는 Pod 재시작으로 최신 version을 반영할 수 있다.
 
 ### 볼륨 마운트
 
@@ -172,7 +180,7 @@ MLflow alias "champion" 조회
   "status": "ok",
   "demo_model": "yolov8n-coco",
   "champion_ready": true,
-  "champion_version": "3"
+  "champion_version": "4"
 }
 ```
 
