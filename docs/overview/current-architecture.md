@@ -1,6 +1,6 @@
 # Current Architecture
 
-> **최종 업데이트:** 2026-04-13
+> **최종 업데이트:** 2026-04-15
 > **상태:** 운영 중
 > **목적:** 클러스터의 현재 유효한 구조를 한 장으로 정리한 문서. 날짜별 작업 기록은 `journal/`, 운영 절차는 `runbooks/`, 장애 기록은 `incidents/` 참조.
 
@@ -98,12 +98,19 @@
     ▼
 [DAG 파이프라인]
     validate-data → train → evaluate → save-model
+                                           │
+                                           ▼
+                                    MLflow Registry 등록
+                                    alias "champion" 지정
+                                           │
+                                           ▼
+                                    FastAPI /predict 자동 반영
 
 [학습 환경]
     - 모델: YOLOv8n
     - 데이터셋: VisDrone (드론 시점 객체 탐지)
     - GPU: V100 × 4 (DDP)
-    - 결과: visdrone-v1.pt / v2.pt → NAS /data/datasets/models/
+    - 결과: visdrone-v{version}.pt → NAS /data/datasets/models/
 ```
 
 ---
@@ -112,23 +119,62 @@
 
 - **Backend:** PostgreSQL (K8s Deployment + NFS PVC)
 - **Artifact 저장소:** NFS PVC → NAS `/data/mlflow-artifacts/`
-- **Argo 연동:** train 단계에서 `mlflow.log_params()`, evaluate 단계에서 `mlflow.log_metrics()` + `best.pt` 자동 기록
-- **기록 규모:** params 105개 + metrics 7개 (학습 실행당)
+- **Argo 연동:**
+  - train 단계: `mlflow.log_params()` (autolog — 105개 자동 기록)
+  - evaluate 단계: `mlflow.log_metrics()` + `best.pt` artifact 등록
+  - save-model 단계: Registry 등록 + alias "champion" 지정
+- **Model Registry:** `visdrone-yolov8` 모델명, alias 기반 버전 관리
 - **접속:** `http://TAILSCALE-IP:30010`
 
 ---
 
 ## 모델 서빙 (FastAPI)
 
-- **모델:** YOLOv8n COCO pretrained (80 클래스)
 - **배포 방식:** K8s Deployment (ai-team 네임스페이스)
 - **GPU:** 2080Ti × 1 (2080ti-gpu-04 고정)
 - **추론 속도:** 77ms
-- **엔드포인트:**
-  - `GET /` — 웹 UI (웹캠 캡처 / 이미지 업로드)
-  - `POST /predict` — 이미지 추론 → bbox + 클래스 + confidence 반환
-  - `GET /health` — 서버 상태
-- **접속:** `http://TAILSCALE-IP:30600`
+
+### 엔드포인트
+
+| 엔드포인트 | 모델 | 설명 |
+|---|---|---|
+| `GET /` | — | 웹 UI |
+| `POST /predict-demo` | YOLOv8n COCO (80 클래스) | 웹캠 데모용 |
+| `POST /predict` | MLflow champion (VisDrone) | E2E MLOps 운영용 |
+| `POST /reload-champion` | — | Pod 재시작 없이 최신 champion 반영 |
+| `GET /health` | — | 서버 상태 + champion 버전 확인 |
+
+### champion 모델 로드 방식
+
+```
+MLflow alias "champion" 조회
+    └→ version 번호 확인 (현재 v3)
+    └→ 1순위: NAS /mnt/datasets/models/visdrone-v{version}.pt 직접 로드
+    └→ 2순위: MLflow artifact 경로 폴백
+```
+
+> **설계 원칙:** MLflow Model Registry는 alias/version 관리에 사용하고, 실제 서빙 모델 로드는 NAS 저장 모델 파일을 1순위로 사용한다. MLflow artifact 경로는 현재 폴백 용도로만 유지한다.
+
+> **반영 방식:** FastAPI /predict는 MLflow alias "champion"의 version을 조회한 뒤, 해당 version에 대응하는 NAS 모델 파일을 로드하도록 구성했다. 필요 시 /reload-champion 엔드포인트로 재시작 없이 반영 가능하다.
+
+### 볼륨 마운트
+
+| 마운트 경로 | PVC | 용도 |
+|---|---|---|
+| `/app` | ConfigMap | main.py 코드 주입 |
+| `/mnt/datasets` | nfs-datasets-pvc | 모델 파일 직접 접근 |
+| `/mnt/mlflow-artifacts` | mlflow-artifacts-pvc (ai-team) | artifact 폴백 |
+
+### health 응답 예시
+
+```json
+{
+  "status": "ok",
+  "demo_model": "yolov8n-coco",
+  "champion_ready": true,
+  "champion_version": "3"
+}
+```
 
 > **현재 한계:** HTTP 서빙 → 웹캠 `getUserMedia()` Chrome 플래그 예외 필요. HTTPS(Ingress + TLS) 적용 예정.
 
@@ -145,6 +191,7 @@
     ▼
 [Argo Workflows — cicd-pipeline 자동 생성]
     └→ validate-data → train → evaluate → save-model
+                                              └→ MLflow champion 자동 갱신
 ```
 
 - **Runner 위치:** master-01 (로컬 kubectl 직접 접근)
@@ -182,7 +229,6 @@
 |---|---|---|
 | HTTPS / Ingress | 미적용 | 웹캠 HTTP 제약 존재. TLS 적용 예정 |
 | JupyterHub 인증 | DummyAuthenticator | GitHub OAuth 교체 예정 |
-| 이미지 빌드 | pip install 런타임 설치 | 전용 이미지 빌드 환경 필요 |
+| 이미지 빌드 | pip install 런타임 설치 | Serving 이미지화 작업 예정 |
 | ResourceQuota | 미적용 | 팀원 GPU 점유 제한 없음 |
-| K8s 업그레이드 | v1.29 (EOL 예정) | v1.31 업그레이드 문서화 완료, 실작업 미진행 |
-| Canary 배포 | 미적용 | 다음 작업 예정 |
+| K8s 업그레이드 | v1.29 (EOL 예정) | v1.31 업그레이드 runbook 작성 예정, 실작업 미진행 |
