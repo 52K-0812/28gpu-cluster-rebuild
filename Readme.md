@@ -440,9 +440,10 @@ kubectl patch svc proxy-public -n ai-team \
 
 ## 🗂️ 문서 구조
 
-```
+```text
 📁 docs/
 ├── 📁 overview/
+│   ├── 📄 cluster-diagram.md            # 클러스터 구성도
 │   └── 📄 current-architecture.md       # 현재 유효한 클러스터 구조 한 장 요약
 │
 ├── 📁 journal/                          # 날짜순 작업 기록 (증거 문서)
@@ -458,7 +459,7 @@ kubectl patch svc proxy-public -n ai-team \
 │   │   └── 📄 7_GPU_클러스터_완전_구축_가이드
 │   │
 │   ├── 📁 3.AI_학습_팀_환경_구축/        # Phase 3 — JupyterHub · RBAC · 네트워크
-│   │   ├── 📄 3_30_RBAC_Namespace_JupyterHub_구축  ⚠️[superseded]
+│   │   ├── 📄 3_30_RBAC_Namespace_JupyterHub_구축  ⚠️ [superseded]
 │   │   ├── 📄 4_01_Grafana_ServiceAccount_분리_및_보안_강화
 │   │   └── 📄 4_02_GPU_노드_네트워크_최적화_10GbE_라우팅_설정
 │   │
@@ -473,7 +474,6 @@ kubectl patch svc proxy-public -n ai-team \
 │       ├── 📄 4_13_GitHub_Actions_CICD
 │       ├── 📄 4_13_FastAPI_YOLOv8_모델_서빙
 │       └── 📄 4_15_MLflow_alias_FastAPI_엔드포인트_분리
-
 │
 ├── 📁 runbooks/                         # 운영 절차 · 복구 매뉴얼
 │   ├── 📄 runbook_etcd_restore.md       # etcd 백업 · 스냅샷 복원 DR 검증
