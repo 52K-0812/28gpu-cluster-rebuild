@@ -1,26 +1,26 @@
 # Runbook — FastAPI YOLOv8 모델 서빙
 
-> **목적:** YOLOv8 추론 서버의 배포 · 검증 · 장애 대응 절차  
-> **최초 구축:** 2026-04-13  
-> **최종 업데이트:** 2026-04-15  
-> **관리 네임스페이스:** `ai-team`  
+> **목적:** YOLOv8 추론 서버의 배포 · 검증 · 장애 대응 절차
+> **최초 구축:** 2026-04-13
+> **최종 업데이트:** 2026-04-15
+> **관리 네임스페이스:** `ai-team`
 > **담당:** 관리자 (`master-01`)
 
 ---
 
 ## 현재 배포 대상
 
-| 항목 | 내용 |
-|---|---|
-| 데모 모델 | `YOLOv8n COCO pretrained` (80 클래스) |
-| 운영 모델 | `MLflow Registry alias champion` → NAS 모델 파일 매핑 |
-| 베이스 이미지 | `ultralytics/ultralytics:8.1.0` |
-| 배포 노드 | `2080ti-gpu-04` (`gpu-type: 2080ti`) |
-| GPU | `2080Ti × 1` |
-| 접속 | `http://TAILSCALE-IP:30600` |
+| 항목            | 내용                                                                                       |
+| --------------- | ------------------------------------------------------------------------------------------ |
+| 데모 모델       | `YOLOv8n COCO pretrained` (80 클래스)                                                      |
+| 운영 모델       | `MLflow Registry alias champion` → NAS 모델 파일 매핑                                      |
+| 베이스 이미지   | `ultralytics/ultralytics:8.1.0`                                                            |
+| 배포 노드       | `2080ti-gpu-04` (`gpu-type: 2080ti`)                                                       |
+| GPU             | `2080Ti × 1`                                                                               |
+| 접속            | `http://TAILSCALE-IP:30600`                                                                |
 | 주요 엔드포인트 | `GET /` · `POST /predict-demo` · `POST /predict` · `POST /reload-champion` · `GET /health` |
-| 현재 배포 방식 | ConfigMap으로 `main.py` 주입 + 컨테이너 시작 시 `pip install` |
-| 다음 개선 작업 | Serving 이미지화로 런타임 `pip install` 제거 |
+| 현재 배포 방식  | ConfigMap으로 `main.py` 주입 + 컨테이너 시작 시 `pip install`                              |
+| 다음 개선 작업  | Serving 이미지화로 런타임 `pip install` 제거                                               |
 
 ### 현재 서빙 구조
 
@@ -46,13 +46,13 @@
 
 ## 엔드포인트 역할
 
-| 엔드포인트 | 역할 | 모델 |
-|---|---|---|
-| `GET /` | 웹 UI 제공 | - |
-| `POST /predict-demo` | 웹캠/일반 이미지 데모 추론 | `yolov8n.pt` (COCO) |
-| `POST /predict` | 운영용 추론 | `visdrone-yolov8@champion` 에 해당하는 NAS 모델 |
-| `POST /reload-champion` | Pod 재시작 없이 최신 champion 재반영 | - |
-| `GET /health` | 상태 점검 | demo/champion 동시 확인 |
+| 엔드포인트              | 역할                                 | 모델                                            |
+| ----------------------- | ------------------------------------ | ----------------------------------------------- |
+| `GET /`                 | 웹 UI 제공                           | -                                               |
+| `POST /predict-demo`    | 웹캠/일반 이미지 데모 추론           | `yolov8n.pt` (COCO)                             |
+| `POST /predict`         | 운영용 추론                          | `visdrone-yolov8@champion` 에 해당하는 NAS 모델 |
+| `POST /reload-champion` | Pod 재시작 없이 최신 champion 재반영 | -                                               |
+| `GET /health`           | 상태 점검                            | demo/champion 동시 확인                         |
 
 ### 모델 로딩 정책
 
@@ -114,9 +114,9 @@ PY2
 
 ### Step 1 — ConfigMap + Deployment + Service 적용
 
-> **참고**  
-> 현재 클러스터는 아직 Serving 이미지화 전 단계다.  
-> 따라서 앱 코드는 ConfigMap으로 주입하고, 의존성은 컨테이너 시작 시 설치한다.  
+> **참고**
+> 현재 클러스터는 아직 Serving 이미지화 전 단계다.
+> 따라서 앱 코드는 ConfigMap으로 주입하고, 의존성은 컨테이너 시작 시 설치한다.
 > 이후 이미지화 단계가 완료되면 이 절차는 대체될 예정이다.
 
 ```bash
@@ -190,7 +190,7 @@ spec:
           name: yolov8-serving-code
       - name: datasets
         persistentVolumeClaim:
-          claimName: datasets-pvc
+          claimName: nfs-datasets-pvc
       - name: mlflow-artifacts
         persistentVolumeClaim:
           claimName: mlflow-artifacts-pvc
@@ -259,6 +259,7 @@ curl -X POST http://TAILSCALE-IP:30600/predict-demo \
 ```
 
 확인 포인트:
+
 - COCO 클래스 기준 탐지 결과가 나와야 한다.
 - 웹캠/일반 이미지 데모 용도로 동작해야 한다.
 
@@ -270,6 +271,7 @@ curl -X POST http://TAILSCALE-IP:30600/predict \
 ```
 
 확인 포인트:
+
 - champion 모델 기준 추론이 수행되어야 한다.
 - `/predict-demo` 와 다른 탐지 결과가 나올 수 있다.
 
@@ -280,6 +282,7 @@ curl -X POST http://TAILSCALE-IP:30600/reload-champion | python3 -m json.tool
 ```
 
 확인 포인트:
+
 - Pod 재시작 없이 최신 alias 대상 모델을 다시 불러와야 한다.
 - 이후 `/health` 에서 champion version 변경 여부를 확인한다.
 
@@ -338,16 +341,17 @@ kubectl delete configmap yolov8-serving-code -n ai-team
 kubectl describe pod -n ai-team -l app=yolov8-serving | tail -30
 ```
 
-| 증상 | 원인 | 조치 |
-|---|---|---|
-| `ContainerCreating` 장시간 지속 | 대용량 이미지 풀링 또는 볼륨 마운트 대기 | `describe pod` 이벤트 확인 |
-| `Pending` | 2080Ti 노드 GPU 자원 부족 | 다른 Pod 점유 확인 후 정리 |
-| `CrashLoopBackOff` | `pip install` 실패, Python 코드 오류, champion 로드 오류 | `kubectl logs` 로 상세 오류 확인 |
-| `Readiness probe failed` | `/health` 가 champion 초기화 전에 실패 | `initialDelaySeconds` 조정 및 초기 로그 확인 |
+| 증상                            | 원인                                                     | 조치                                         |
+| ------------------------------- | -------------------------------------------------------- | -------------------------------------------- |
+| `ContainerCreating` 장시간 지속 | 대용량 이미지 풀링 또는 볼륨 마운트 대기                 | `describe pod` 이벤트 확인                   |
+| `Pending`                       | 2080Ti 노드 GPU 자원 부족                                | 다른 Pod 점유 확인 후 정리                   |
+| `CrashLoopBackOff`              | `pip install` 실패, Python 코드 오류, champion 로드 오류 | `kubectl logs` 로 상세 오류 확인             |
+| `Readiness probe failed`        | `/health` 가 champion 초기화 전에 실패                   | `initialDelaySeconds` 조정 및 초기 로그 확인 |
 
 ### champion 모델 로드 실패
 
 증상 예시:
+
 - `/health` 에서 `champion_ready: false`
 - 로그에 NAS 파일 없음 또는 alias 조회 실패 표시
 
@@ -359,6 +363,7 @@ kubectl logs -n ai-team -l app=yolov8-serving --tail=100
 ```
 
 점검 포인트:
+
 - MLflow alias `champion` 이 올바른 version 을 가리키는지
 - `/mnt/datasets/models/visdrone-v{version}.pt` 파일이 실제 존재하는지
 - `mlflow-artifacts-pvc` 가 정상 마운트되었는지

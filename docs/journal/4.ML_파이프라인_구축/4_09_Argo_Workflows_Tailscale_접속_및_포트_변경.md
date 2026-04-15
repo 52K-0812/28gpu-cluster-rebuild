@@ -6,23 +6,23 @@
 > **작업 목적:** Argo Workflows 서비스 포트를 2746에서 30500으로 변경하고, Tailscale VPN을 통해 외부에서 접속 가능하도록 systemd port-forward 서비스를 구성한다.
 > **대상 서버:** master-01 (LB_PUBLIC_IP / Tailscale: TAILSCALE_HOST)
 > **작업 환경:** Kubernetes v1.29, Helm, Argo Workflows, Tailscale
-> **최종 결과:** `http://TAILSCALE_HOST:30340` 으로 Argo UI Tailscale 접속 완료
+> **최종 결과:** `http://TAILSCALE_HOST:30500` 으로 Argo UI Tailscale 접속 완료
 
 ---
 
 ## 🏗️ 2. 작업 흐름
 
 ```
-[Helm values 수정 → servicePort: 30340]
+[Helm values 수정 → servicePort: 30500]
         │
         ▼
-[helm upgrade → MetalLB IP 30340 포트 반영]
+[helm upgrade → MetalLB IP 30500 포트 반영]
         │
         ▼
 [systemd port-forward 서비스 생성]
         │ KUBECONFIG 환경변수 설정 필요 (root 실행 시)
         ▼
-[Tailscale → master-01:30340 → Argo UI]
+[Tailscale → master-01:30500 → Argo UI]
 ```
 
 ---
@@ -161,10 +161,10 @@ server:
 
 ## ✅ 4. 최종 접속 정보
 
-| 접속 방법              | 주소                            |
-| ------------------ | ----------------------------- |
+| 접속 방법            | 주소                          |
+| -------------------- | ----------------------------- |
 | **Tailscale (권장)** | `http://TAILSCALE_HOST:30500` |
-| **MetalLB (내부망)**  | `http://LB_PUBLIC_IP:30500`   |
+| **MetalLB (내부망)** | `http://LB_PUBLIC_IP:30500`   |
 
 ---
 
