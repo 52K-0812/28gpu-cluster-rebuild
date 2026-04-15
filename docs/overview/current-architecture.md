@@ -8,15 +8,15 @@
 
 ## 노드 구성
 
-| 노드 | 역할 | GPU | IP |
-|---|---|---|---|
-| master-01 | Control Plane | — | `MASTER-IP` |
-| master-02 | Worker | — | `WORKER-IP-02` |
-| v100-gpu-01 | Worker (학습 전용) | V100 × 4 | `WORKER-IP-03` |
-| 2080ti-gpu-02 | Worker | 2080Ti × 8 | `WORKER-IP-04` |
-| 2080ti-gpu-03 | Worker | 2080Ti × 7 | `WORKER-IP-05` |
-| 2080ti-gpu-04 | Worker (서빙 전용) | 2080Ti × 8 | `WORKER-IP-06` |
-| NAS (nas-01) | 스토리지 | — | `MASTER-IP` (1G) / `10.10.10.157` (10G) |
+| 노드            | 역할                 | GPU        | IP                                      |
+| ------------- | ------------------ | ---------- | --------------------------------------- |
+| master-01     | Control Plane      | —          | `MASTER-IP`                             |
+| master-02     | Worker (시스템 파드 전담) | —          | `WORKER-IP-02`                          |
+| v100-gpu-01   | Worker (학습 전용)     | V100 × 4   | `WORKER-IP-03`                          |
+| 2080ti-gpu-02 | Worker             | 2080Ti × 8 | `WORKER-IP-04`                          |
+| 2080ti-gpu-03 | Worker             | 2080Ti × 7 | `WORKER-IP-05`                          |
+| 2080ti-gpu-04 | Worker (서빙 전용)     | 2080Ti × 8 | `WORKER-IP-06`                          |
+| NAS (nas-01)  | 스토리지               | —          | `MASTER-IP` (1G) / `10.10.10.157` (10G) |
 
 - **K8s 버전:** v1.29.15
 - **OS:** Ubuntu 22.04.5 LTS
@@ -82,6 +82,8 @@
 - **GPU 스케줄링:** V100 / 2080Ti 자동 배정 (nodeSelector + label)
 - **팀원 계정:** member-01 ~ member-05 (RBAC, ai-team 네임스페이스 격리)
 - **접속:** Tailscale → `http://TAILSCALE-IP:30000`
+- **master-01 taint:** `node-role.kubernetes.io/control-plane:NoSchedule` (파드 스케줄링 차단)
+- **master-02 배치 파드:** Prometheus, Grafana, Portainer, Alertmanager, JupyterHub hub/proxy
 
 ---
 
