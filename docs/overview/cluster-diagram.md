@@ -1,6 +1,6 @@
 # 클러스터 구조 다이어그램
 
-> **기준일:** 2026-04-13
+> **기준일:** 2026-04-15
 > **K8s:** v1.29.15 / Ubuntu 22.04.5 LTS / Calico v3.27
 
 ---
@@ -68,32 +68,41 @@ graph TD
 
 ```mermaid
 graph LR
-    DEV["개발자\ngit push → main"]
+    DEV["개발자<br/>git push → main"]
 
     subgraph CICD["CI/CD (master-01)"]
-        GHA["GitHub Actions\nSelf-hosted Runner\n~16s 트리거"]
+        GHA["GitHub Actions<br/>Self-hosted Runner<br/>~16s 트리거"]
     end
 
     subgraph ARGO["Argo Workflows DAG (ai-team NS)"]
-        VAL["validate-data\nVisDrone 존재 확인"]
-        TRAIN["train\nV100 × 4 DDP\nYOLOv8n"]
-        EVAL["evaluate\nmAP@0.5 측정"]
-        SAVE["save-model\nNAS 저장"]
+        VAL["validate-data<br/>VisDrone 존재 확인"]
+        TRAIN["train<br/>V100 × 4 DDP<br/>YOLOv8n"]
+        EVAL["evaluate<br/>mAP 측정<br/>MLflow metrics 기록"]
+        SAVE["save-model<br/>NAS 저장<br/>Registry 등록"]
         VAL --> TRAIN --> EVAL --> SAVE
     end
 
-    subgraph MLFLOW["MLflow (mlflow NS · :30010)"]
-        PG["PostgreSQL\n메타데이터 백엔드"]
-        ART["NFS PVC\n/data/mlflow-artifacts/\nbest.pt · runs"]
+    subgraph MLFLOW["MLflow (mlflow NS :30010)"]
+        PG["PostgreSQL<br/>메타데이터 백엔드"]
+        ART["NFS PVC<br/>/data/mlflow-artifacts/"]
+        REG["Model Registry<br/>visdrone-yolov8<br/>alias: champion"]
         PG --- ART
+        PG --- REG
     end
 
-    NAS["NAS\n/data/datasets/models/\nvisdrone-v{N}.pt"]
+    NAS["NAS<br/>/data/datasets/models/<br/>visdrone-vN.pt"]
+
+    subgraph SERVE["Serving (ai-team NS :30600)"]
+        API["FastAPI<br/>predict-demo: COCO<br/>predict: champion"]
+    end
 
     DEV --> GHA --> VAL
     TRAIN -->|"log_params 105개"| PG
-    EVAL -->|"log_metrics 7개\nlog_artifact best.pt"| PG
+    EVAL -->|"log_metrics 7개<br/>log_artifact best.pt"| PG
     SAVE --> NAS
+    SAVE --> REG
+    REG --> API
+    NAS --> API
 
     style GHA fill:#dbeafe,stroke:#2563eb
     style VAL fill:#fef3c7,stroke:#d97706
@@ -102,7 +111,9 @@ graph LR
     style SAVE fill:#dcfce7,stroke:#16a34a
     style PG fill:#ede9fe,stroke:#7c3aed
     style ART fill:#dcfce7,stroke:#16a34a
+    style REG fill:#ede9fe,stroke:#7c3aed
     style NAS fill:#dcfce7,stroke:#16a34a
+    style API fill:#dbeafe,stroke:#2563eb
 ```
 
 ---
@@ -210,4 +221,5 @@ graph TD
 | 날짜 | 변경 내용 |
 |---|---|
 | 2026-03-31 | master-01 NoSchedule taint 적용, master-02 시스템 파드 전담 설계 확정 |
-| 2026-04-13 | FastAPI YOLOv8 서빙, MLflow, GitHub Actions CI/CD, etcd DR 검증 완료 |
+| 2026-04-13 | MLflow, GitHub Actions CI/CD, etcd DR 검증 반영 |
+| 2026-04-15 | FastAPI champion serving, MLflow alias 기반 운영 흐름 반영 |

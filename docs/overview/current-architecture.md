@@ -216,7 +216,8 @@ MLflow alias "champion" 조회
 | Grafana | GPU 대시보드 #12239 (DCGM Exporter) |
 | GPU 메트릭 | DCGM Exporter — 온도 / 전력 / 메모리 / 클럭 |
 | 알람 | Alertmanager → Gmail SMTP |
-| 알람 룰 | GPU 온도 80°C 초과 / 메모리 사용률 90% 초과 / GPU Idle |
+| 알람 룰 | GPU 온도 85°C 초과 / GPU 메모리 임계치 초과 / GPU 노드 exporter 비응답 |
+> 상세 Alertmanager 설정 및 실제 PrometheusRule 정의는 `4_07_Alertmanager_이메일_알람_구성.md` 참조.
 
 ---
 
