@@ -8,15 +8,15 @@
 
 ## 노드 구성
 
-| 노드            | 역할                 | GPU        | IP                                      |
-| ------------- | ------------------ | ---------- | --------------------------------------- |
-| master-01     | Control Plane      | —          | `MASTER-IP`                             |
-| master-02     | Worker (시스템 파드 전담) | —          | `WORKER-IP-02`                          |
-| v100-gpu-01   | Worker (학습 전용)     | V100 × 4   | `WORKER-IP-03`                          |
-| 2080ti-gpu-02 | Worker             | 2080Ti × 8 | `WORKER-IP-04`                          |
-| 2080ti-gpu-03 | Worker             | 2080Ti × 7 | `WORKER-IP-05`                          |
-| 2080ti-gpu-04 | Worker (서빙 전용)     | 2080Ti × 8 | `WORKER-IP-06`                          |
-| NAS (nas-01)  | 스토리지               | —          | `MASTER-IP` (1G) / `10.10.10.157` (10G) |
+| 노드 | 역할 | 배치 파드 / 용도 | GPU | IP |
+|---|---|---|---|---|
+| master-01 | Control Plane 전용 | etcd · apiserver · scheduler · controller-manager<br>GitHub Actions Runner · etcd 백업 crontab<br>**NoSchedule taint 적용** | — | MASTER-IP |
+| master-02 | 시스템 파드 전담 Worker | Prometheus · Grafana · Portainer · Alertmanager<br>JupyterHub hub/proxy · MLflow · Argo Controller | — | WORKER-IP-02 |
+| v100-gpu-01 | Worker (학습 전용) | Argo DAG 학습 Job (V100 × 4 DDP) | V100 × 4 | 10.10.10.153 |
+| 2080ti-gpu-02 | Worker | 학습 워크로드 | 2080Ti × 8 | 10.10.10.154 |
+| 2080ti-gpu-03 | Worker | 학습 워크로드 | 2080Ti × 7 | 10.10.10.155 |
+| 2080ti-gpu-04 | Worker (서빙 전용) | FastAPI YOLOv8 서빙 (2080Ti × 1) | 2080Ti × 8 | 10.10.10.156 |
+| NAS (nas-01) | 스토리지 | 28TB NFS 공유 스토리지 | — | MASTER-IP (1G) / 10.10.10.157 (10G) |
 
 - **K8s 버전:** v1.29.15
 - **OS:** Ubuntu 22.04.5 LTS
@@ -210,13 +210,13 @@ MLflow alias "champion" 조회
 
 ## 모니터링
 
-| 항목 | 내용 |
-|---|---|
-| Prometheus | kube-prometheus-stack (Helm) |
-| Grafana | GPU 대시보드 #12239 (DCGM Exporter) |
-| GPU 메트릭 | DCGM Exporter — 온도 / 전력 / 메모리 / 클럭 |
-| 알람 | Alertmanager → Gmail SMTP |
-| 알람 룰 | GPU 온도 85°C 초과 / GPU 메모리 임계치 초과 / GPU 노드 exporter 비응답 |
+| 항목         | 내용                                                    |
+| ---------- | ----------------------------------------------------- |
+| Prometheus | kube-prometheus-stack (Helm)                          |
+| Grafana    | GPU 대시보드 #12239 (DCGM Exporter)                       |
+| GPU 메트릭    | DCGM Exporter — 온도 / 전력 / 메모리 / 클럭                    |
+| 알람         | Alertmanager → Gmail SMTP                             |
+| 알람 룰       | GPU 온도 85°C 초과 / GPU 메모리 임계치 초과 / GPU 노드 exporter 비응답 |
 > 상세 Alertmanager 설정 및 실제 PrometheusRule 정의는 `4_07_Alertmanager_이메일_알람_구성.md` 참조.
 
 ---
