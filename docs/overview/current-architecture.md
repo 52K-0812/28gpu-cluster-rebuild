@@ -1,6 +1,6 @@
 # Current Architecture
 
-> **최종 업데이트:** 2026-04-15
+> **최종 업데이트:** 2026-04-17
 > **상태:** 운영 중
 > **목적:** 클러스터의 현재 유효한 구조를 한 장으로 정리한 문서. 날짜별 작업 기록은 `journal/`, 운영 절차는 `runbooks/`, 장애 기록은 `incidents/` 참조.
 
@@ -8,15 +8,15 @@
 
 ## 노드 구성
 
-| 노드 | 역할 | 배치 파드 / 용도 | GPU | IP |
-|---|---|---|---|---|
-| master-01 | Control Plane 전용 | etcd · apiserver · scheduler · controller-manager<br>GitHub Actions Runner · etcd 백업 crontab<br>**NoSchedule taint 적용** | — | MASTER-IP |
-| master-02 | 시스템 파드 전담 Worker | Prometheus · Grafana · Portainer · Alertmanager<br>JupyterHub hub/proxy · MLflow · Argo Controller | — | WORKER-IP-02 |
-| v100-gpu-01 | Worker (학습 전용) | Argo DAG 학습 Job (V100 × 4 DDP) | V100 × 4 | 10.10.10.153 |
-| 2080ti-gpu-02 | Worker | 학습 워크로드 | 2080Ti × 8 | 10.10.10.154 |
-| 2080ti-gpu-03 | Worker | 학습 워크로드 | 2080Ti × 7 | 10.10.10.155 |
-| 2080ti-gpu-04 | Worker (서빙 전용) | FastAPI YOLOv8 서빙 (2080Ti × 1) | 2080Ti × 8 | 10.10.10.156 |
-| NAS (nas-01) | 스토리지 | 28TB NFS 공유 스토리지 | — | MASTER-IP (1G) / 10.10.10.157 (10G) |
+| 노드            | 역할                 | GPU        | IP                                      |
+| ------------- | ------------------ | ---------- | --------------------------------------- |
+| master-01     | Control Plane      | —          | `MASTER-IP`                             |
+| master-02     | Worker (시스템 파드 전담) | —          | `WORKER-IP-02`                          |
+| v100-gpu-01   | Worker (학습 전용)     | V100 × 4   | `WORKER-IP-03`                          |
+| 2080ti-gpu-02 | Worker             | 2080Ti × 8 | `WORKER-IP-04`                          |
+| 2080ti-gpu-03 | Worker             | 2080Ti × 7 | `WORKER-IP-05`                          |
+| 2080ti-gpu-04 | Worker (서빙 전용)     | 2080Ti × 8 | `WORKER-IP-06`                          |
+| NAS (nas-01)  | 스토리지               | —          | `MASTER-IP` (1G) / `10.10.10.157` (10G) |
 
 - **K8s 버전:** v1.29.15
 - **OS:** Ubuntu 22.04.5 LTS
@@ -131,8 +131,10 @@
 ## 모델 서빙 (FastAPI)
 
 - **배포 방식:** K8s Deployment (ai-team 네임스페이스)
-- **GPU:** 2080Ti × 1 (2080ti-gpu-04 고정)
+- **배포 이미지:** `1jkim/yolov8-serving:v1` (DockerHub public) — 2026-04-17 전환
+- **GPU:** 2080Ti × 1
 - **추론 속도:** 77ms
+- **nodeSelector:** `gpu-type=2080ti` (`kubernetes.io/hostname` 고정 제거됨 — 2026-04-17)
 
 ### 엔드포인트
 
@@ -149,14 +151,14 @@
 - 루트(`/`) 페이지에 웹 UI 제공
 - 파일 업로드 / 웹캠 캡처 모드 지원
 - `/predict-demo` / `/predict` 엔드포인트 선택 가능
-- 헤더 상태 배지로 `COCO · 80cls` / `champion · v4` 표시
+- 헤더 상태 배지로 `COCO · 80cls` / `champion · v5` 표시
 - 추론 결과 이미지, 탐지 카드, confidence bar 표시
 
 ### champion 모델 로드 방식
 
 ```
 MLflow alias "champion" 조회
-    └→ version 번호 확인 (현재 v4)
+    └→ version 번호 확인 (현재 v5)
     └→ 1순위: NAS /mnt/datasets/models/visdrone-v{version}.pt 직접 로드
     └→ 2순위: MLflow artifact 경로 폴백 (예비 경로)
 ```
@@ -169,22 +171,25 @@ MLflow alias "champion" 조회
 
 | 마운트 경로 | PVC | 용도 |
 |---|---|---|
-| `/app` | ConfigMap | main.py 코드 주입 |
 | `/mnt/datasets` | nfs-datasets-pvc | 모델 파일 직접 접근 |
 | `/mnt/mlflow-artifacts` | mlflow-artifacts-pvc (ai-team) | artifact 폴백 |
+
+> ~~`/app` ConfigMap 마운트~~ — **제거됨 (2026-04-16).** 이미지화 이후 `main.py`가 이미지 내장. ConfigMap read-only 마운트가 모델 다운로드 경로 쓰기 실패를 유발하여 제거.
 
 ### health 응답 예시
 
 ```json
 {
   "status": "ok",
-  "demo_model": "yolov8n-coco",
+  "demo_model": "yolov8n-coco (80 classes)",
   "champion_ready": true,
-  "champion_version": "4"
+  "champion_version": "5"
 }
 ```
 
 > **현재 한계:** HTTP 서빙 → 웹캠 `getUserMedia()` Chrome 플래그 예외 필요. HTTPS(Ingress + TLS) 적용 예정.
+
+> **이미지 레지스트리:** `1jkim/yolov8-serving:v1` (DockerHub public). 2026-04-17 push 완료. 모든 2080Ti 노드에서 pull 가능. 로컬 containerd 의존성 제거됨.
 
 ---
 
@@ -210,14 +215,13 @@ MLflow alias "champion" 조회
 
 ## 모니터링
 
-| 항목         | 내용                                                    |
-| ---------- | ----------------------------------------------------- |
-| Prometheus | kube-prometheus-stack (Helm)                          |
-| Grafana    | GPU 대시보드 #12239 (DCGM Exporter)                       |
-| GPU 메트릭    | DCGM Exporter — 온도 / 전력 / 메모리 / 클럭                    |
-| 알람         | Alertmanager → Gmail SMTP                             |
-| 알람 룰       | GPU 온도 85°C 초과 / GPU 메모리 임계치 초과 / GPU 노드 exporter 비응답 |
-> 상세 Alertmanager 설정 및 실제 PrometheusRule 정의는 `4_07_Alertmanager_이메일_알람_구성.md` 참조.
+| 항목         | 내용                                         |
+| ---------- | ------------------------------------------ |
+| Prometheus | kube-prometheus-stack (Helm)               |
+| Grafana    | GPU 대시보드 #12239 (DCGM Exporter)            |
+| GPU 메트릭    | DCGM Exporter — 온도 / 전력 / 메모리 / 클럭         |
+| 알람         | Alertmanager → Gmail SMTP                  |
+| 알람 룰       | GPU 온도 85°C 초과 / 메모리 사용률 95% 초과 / GPU Idle |
 
 ---
 
@@ -238,6 +242,7 @@ MLflow alias "champion" 조회
 |---|---|---|
 | HTTPS / Ingress | 미적용 | 웹캠 HTTP 제약 존재. TLS 적용 예정 |
 | JupyterHub 인증 | DummyAuthenticator | GitHub OAuth 교체 예정 |
-| 이미지 빌드 | pip install 런타임 설치 | Serving 이미지화 작업 예정 |
+| 서빙 이미지 레지스트리 | 로컬 보관 | DockerHub push 미완료. 노드 교체 시 재load 필요 |
 | ResourceQuota | 미적용 | 팀원 GPU 점유 제한 없음 |
 | K8s 업그레이드 | v1.29 (EOL 예정) | v1.31 업그레이드 runbook 작성 예정, 실작업 미진행 |
+| buildkitd 서비스 등록 | nohup 백그라운드 | master-01 재부팅 시 재실행 필요 |
