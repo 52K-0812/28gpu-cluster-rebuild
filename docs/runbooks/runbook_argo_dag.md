@@ -9,17 +9,18 @@
 
 ## 1. 📋 현재 배포 대상
 
-| 항목 | 내용 |
-|---|---|
-| WorkflowTemplate | `yolov8-dag-pipeline` (ai-team 네임스페이스) |
-| Argo 버전 | v4.0.4 |
-| 파이프라인 구조 | validate-data → train → evaluate → save-model (4단계 DAG) |
-| 학습 GPU | V100 × 4 (DDP, `gpu-type: v100` nodeSelector) |
-| 데이터셋 | VisDrone (`nfs-datasets-pvc` → NAS `/data/datasets/`) |
-| 모델 저장 경로 | NAS `/data/datasets/models/visdrone-{version}.pt` |
-| UI 접속 | `http://TAILSCALE-IP:30500` (Tailscale) |
+| 항목             | 내용                                                      |
+| ---------------- | --------------------------------------------------------- |
+| WorkflowTemplate | `yolov8-dag-pipeline` (ai-team 네임스페이스)              |
+| Argo 버전        | v4.0.4                                                    |
+| 파이프라인 구조  | validate-data → train → evaluate → save-model (4단계 DAG) |
+| 학습 GPU         | V100 × 4 (DDP, `gpu-type: v100` nodeSelector)             |
+| 데이터셋         | VisDrone (`nfs-datasets-pvc` → NAS `/data/datasets/`)     |
+| 모델 저장 경로   | NAS `/data/datasets/models/visdrone-{version}.pt`         |
+| UI 접속          | `http://TAILSCALE-IP:30500` (Tailscale)                   |
 
 **파이프라인 흐름:**
+
 ```
 [validate-data]
     │ VisDrone 데이터셋 존재 확인 — 실패 시 전체 중단
@@ -76,11 +77,11 @@ ls /data/datasets/visdrone/VisDrone2019-DET-val/images | wc -l
 3. **Submit** 클릭
 4. 파라미터 입력:
 
-| 파라미터 | 기본값 | 설명 |
-|---|---|---|
-| `epochs` | `100` | 학습 에포크 수 |
-| `batch-size` | `16` | 배치 사이즈 |
-| `model-version` | `v1` | 저장 버전명 (v1, v2, v3...) |
+| 파라미터        | 기본값 | 설명                        |
+| --------------- | ------ | --------------------------- |
+| `epochs`        | `100`  | 학습 에포크 수              |
+| `batch-size`    | `16`   | 배치 사이즈                 |
+| `model-version` | `v1`   | 저장 버전명 (v1, v2, v3...) |
 
 5. **+SUBMIT** 클릭
 
@@ -306,12 +307,12 @@ cat /data/datasets/runs/dag-train/eval_result.txt
 
 **단계별 정상 소요 시간 (epochs=1 기준):**
 
-| 단계 | 소요 시간 |
-|---|---|
-| validate-data | ~5s |
-| train | ~3m |
-| evaluate | ~30s |
-| save-model | ~5s |
+| 단계          | 소요 시간 |
+| ------------- | --------- |
+| validate-data | ~5s       |
+| train         | ~3m       |
+| evaluate      | ~30s      |
+| save-model    | ~5s       |
 
 ---
 
@@ -354,12 +355,12 @@ kubectl apply -f yolov8-dag-pipeline-prev.yaml
 kubectl describe workflow <workflow-name> -n ai-team | tail -20
 ```
 
-| 증상 | 원인 | 조치 |
-|---|---|---|
-| validate-data Pending | V100 GPU 자원 없음 | 실행 중인 학습 Job 확인 후 대기 또는 정리 |
-| validate-data Failed | VisDrone 데이터셋 없음 | `ls /data/datasets/visdrone/` 경로 확인 |
-| train OOMKilled | `/dev/shm` 부족 또는 GPU OOM | dshm sizeLimit 조정 또는 batch-size 축소 |
-| evaluate Failed | best.pt 없음 | `ls /data/datasets/runs/dag-train/weights/` 확인 |
+| 증상                  | 원인                         | 조치                                             |
+| --------------------- | ---------------------------- | ------------------------------------------------ |
+| validate-data Pending | V100 GPU 자원 없음           | 실행 중인 학습 Job 확인 후 대기 또는 정리        |
+| validate-data Failed  | VisDrone 데이터셋 없음       | `ls /data/datasets/visdrone/` 경로 확인          |
+| train OOMKilled       | `/dev/shm` 부족 또는 GPU OOM | dshm sizeLimit 조정 또는 batch-size 축소         |
+| evaluate Failed       | best.pt 없음                 | `ls /data/datasets/runs/dag-train/weights/` 확인 |
 
 ### shared memory 부족 오류
 
