@@ -227,8 +227,8 @@ curl -s -X POST http://112.76.56.156:30600/predict -F "file=@test.png" | \
 
 ## 🔜 11. 미해결 / 후속 작업
 
-| 항목 | 상태 | 비고 |
-|---|---|---|
-| DockerHub push | ✅ 완료 (2026-04-17) | `1jkim/yolov8-serving:v1` push, hostname nodeSelector 제거 |
-| ConfigMap yolov8-serving-code | 잔존 | 정리 가능하나 현재 미삭제 |
-| buildkitd 서비스 등록 | 미완료 | 현재 nohup 백그라운드. 재부팅 시 재실행 필요 |
+| 항목                            | 상태                | 비고                                                       |
+| ----------------------------- | ----------------- | -------------------------------------------------------- |
+| DockerHub push                | ✅ 완료 (2026-04-17) | `1jkim/yolov8-serving:v1` push, hostname nodeSelector 제거 |
+| ConfigMap yolov8-serving-code | 잔존                | 정리 가능하나 현재 미삭제                                           |
+| buildkitd 서비스 등록              | 미완료               | 현재 nohup 백그라운드. 재부팅 시 재실행 필요                             |

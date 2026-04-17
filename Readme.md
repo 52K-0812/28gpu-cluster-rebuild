@@ -19,7 +19,7 @@
 
 | 항목     | 내용                                                                    |
 | -------- | ----------------------------------------------------------------------- |
-| **기간** | 2026년 3월 12일 ~ 4월 15일 (약 5주)                                     |
+| **기간** | 2026년 3월 12일 ~ 4월 17일 (약 5주)                                     |
 | **역할** | 단독 수행 (시스템 복구 · 인프라 설계 · ML 파이프라인 구축 전 과정)      |
 | **환경** | 학교 서버실 온프레미스 GPU 클러스터                                     |
 | **목표** | 방치된 GPU 클러스터를 AI 학습 파이프라인이 동작하는 MLOps 인프라로 전환 |
@@ -156,7 +156,7 @@
               └ 전 GPU 노드 192.168.0.0/16 경로를 10GbE로 우선 라우팅 (metric 50)
               └ v100-gpu-01 물리 케이블 Cat5 → Cat5e/6 교체 → 1000Mbps 복구
 
-━━━ Phase 4 : ML 파이프라인 구축 (4/2 ~ 4/6) ━━━━━━━━━━━━━━━━━━━━━━━━━━
+━━━ Phase 4 : ML 파이프라인 구축 (4/2 ~ 4/17) ━━━━━━━━━━━━━━━━━━━━━━━━━━
 
 4월 2일   ──  YOLOv8 COCO 학습 파이프라인 첫 가동
               └ YOLOv8 COCO 학습 K8s Job 제출 → mAP@0.5 46.8% 달성
@@ -221,6 +221,23 @@
               └ [FastAPI] /reload-champion 으로 재시작 없는 수동 반영 가능
               └ [UI] 루트(/) 페이지에 파일 업로드 · 웹캠 캡처 · 결과 시각화 웹 UI 추가
               └ [검증] champion v4 NAS 로드 확인 · /health 정상 응답 · 웹 UI 추론 성공
+
+4월 16일  ──  서빙 이미지화 — pip install 런타임 제거 ⭐
+              └ nerdctl v1.7.6 + buildkit v0.14.1 master-01에 구성
+              └ Dockerfile 작성: ultralytics:8.1.0 베이스 + fastapi/mlflow pip install 내장
+              └ yolov8-serving:local-v1 빌드 (13.7 GiB)
+              └ tar export → scp → 2080ti-gpu-04 nerdctl --namespace k8s.io load
+              └ Deployment 교체: command/args 제거 + ConfigMap /app 마운트 제거 + hostname 고정
+              └ 장애 3건 해소: containerd namespace 격리 · ConfigMap read-only 충돌 · nodeSelector 범위 불일치
+              └ /health · /predict-demo · /predict 전 엔드포인트 정상 확인
+
+4월 17일  ──  DockerHub 등록 + nodeSelector 고정 해제 ⭐
+              └ nerdctl login https://index.docker.io/v1 + config.json auths 키 교정
+              └ 1jkim/yolov8-serving:v1 DockerHub push 완료 (203s, 13.7 GiB)
+              └ Deployment 이미지 교체: yolov8-serving:local-v1 → 1jkim/yolov8-serving:v1
+              └ hostname nodeSelector 제거 → gpu-type: 2080ti 단독 유지
+              └ 2080Ti 풀(02~04) 전체에서 자동 스케줄 가능한 구조로 전환
+              └ 검증: Pod Running · 1jkim/yolov8-serving:v1 · champion_ready=true · v5 정상
 ```
 
 ---
@@ -408,7 +425,8 @@ kubectl patch svc proxy-public -n ai-team \
 | 알람          | GPU 온도/메모리/노드 다운 3종 → Gmail 자동 통보                     |
 | 워크플로우    | Argo Workflows — 팀원 웹 UI로 학습 Job 제출 가능                    |
 | MLflow        | 실험 추적 · params 105개 + metrics 자동 기록 · Registry alias(champion) 기반 버전 관리 |
-| 복구 기간     | **약 5주** (3/12 ~ 4/13)                                            |
+| 모델 서빙     | FastAPI /predict(champion) · /predict-demo(COCO) · 웹 UI · 77ms · DockerHub `1jkim/yolov8-serving:v1` |
+| 복구 기간     | **약 5주** (3/12 ~ 4/17)                                            |
 
 ![자료사진](./docs/images/스크린샷_2026-03-30_172818.png)
 
@@ -433,8 +451,8 @@ kubectl patch svc proxy-public -n ai-team \
 - [x] Filebrowser — NAS 웹 파일 탐색기 배포 (monitoring 네임스페이스)
 - [x] MLflow alias + FastAPI 엔드포인트 분리 — /predict-demo(COCO), /predict(champion) 분리 + NAS 우선 로드 구조 적용
 - [x] FastAPI 웹 UI 구축 — 파일 업로드 / 웹캠 캡처 / 결과 시각화 페이지 추가
-- [ ] Serving 이미지화 — pip install 제거, 컨테이너 이미지 빌드 및 레지스트리 등록
-- [ ] Canary 배포 — 모델 버전 간 트래픽 점진적 전환
+- [x] 서빙 이미지화 — pip install 런타임 제거, nerdctl + buildkit 커스텀 이미지 빌드
+- [x] DockerHub 등록 — `1jkim/yolov8-serving:v1` push 완료, hostname nodeSelector 고정 해제
 - [ ] Ingress + TLS — HTTPS 적용 (웹캠 getUserMedia 제약 해소)
 - [ ] JupyterHub GitHub OAuth — DummyAuthenticator 교체
 - [ ] ResourceQuota + PriorityClass — 네임스페이스별 GPU 자원 상한 및 우선순위 정책 적용
@@ -476,7 +494,9 @@ kubectl patch svc proxy-public -n ai-team \
 │       ├── 📄 4_13_MLflow_설치_및_Argo_DAG_연동
 │       ├── 📄 4_13_GitHub_Actions_CICD
 │       ├── 📄 4_13_FastAPI_YOLOv8_모델_서빙
-│       └── 📄 4_15_MLflow_alias_FastAPI_엔드포인트_분리
+│       ├── 📄 4_15_MLflow_alias_FastAPI_엔드포인트_분리
+│       ├── 📄 4_16_YOLOv8_서빙_이미지화
+│       └── 📄 4_17_YOLOv8_서빙_이미지_DockerHub_등록
 │
 ├── 📁 runbooks/                         # 운영 절차 · 복구 매뉴얼
 │   ├── 📄 runbook_etcd_restore.md       # etcd 백업 · 스냅샷 복원 DR 검증
@@ -492,7 +512,8 @@ kubectl patch svc proxy-public -n ai-team \
 │   ├── 📄 3_31_네트워크_장애_및_클러스터_설계_개선  ⭐ MetalLB ARP 충돌 · Calico 연쇄 장애
 │   ├── 📄 4_01_JupyterHub_다중_접속_장애_및_서비스_설계_개선  ⭐ port-forward 제거 · 재설계
 │   ├── 📄 4_01_Grafana_대시보드_미표시_및_RBAC_권한_문제
-│   └── 📄 4_09_Alertmanager_Silence_DaemonSet_알람_억제
+│   ├── 📄 4_09_Alertmanager_Silence_DaemonSet_알람_억제
+│   └── 📄 4_16_incidents_이미지화_장애_3건   ⭐ containerd namespace 격리 · ConfigMap read-only 충돌 · nodeSelector 범위 불일치
 │
 └── 📁 images/
 ```
@@ -552,6 +573,8 @@ kubectl patch svc proxy-public -n ai-team \
 | [MLflow 설치 및 Argo DAG 연동 ⭐](docs/journal/4.ML_파이프라인_구축/4_13_MLflow_설치_및_Argo_DAG_연동.md) | PostgreSQL 백엔드 · params 105개 + metrics 자동 기록 · 버전별 모델 저장 |
 | [GitHub Actions CI/CD ⭐](docs/journal/4.ML_파이프라인_구축/4_13_GitHub_Actions_CICD.md) | Self-hosted Runner · git push → Argo Workflow 자동 트리거 · 16s 완료 |
 | [MLflow alias + FastAPI 엔드포인트 분리 ⭐](docs/journal/4.ML_파이프라인_구축/4_15_MLflow_alias_FastAPI_엔드포인트_분리.md) | Registry alias(champion) · NAS 우선 로드 · /predict-demo / /predict 분리 · 웹 UI 구축 |
+| [YOLOv8 서빙 이미지화 ⭐](docs/journal/4.ML_파이프라인_구축/4_16_YOLOv8_서빙_이미지화.md) | nerdctl + buildkit 빌드 · pip install 런타임 제거 · ConfigMap 마운트 해제 · 장애 3건 해소 |
+| [서빙 이미지 DockerHub 등록 ⭐](docs/journal/4.ML_파이프라인_구축/4_17_YOLOv8_서빙_이미지_DockerHub_등록.md) | `1jkim/yolov8-serving:v1` push · hostname nodeSelector 고정 해제 · 2080Ti 풀 전체 스케줄 가능 |
 | [etcd 백업 및 DR 검증 ⭐](docs/runbooks/runbook_etcd_restore.md) | 호스트 crontab 자동 백업 · NAS 저장 · snapshot 무결성 검증 |
 
 ### 5. 장애 기록 (incidents)
@@ -567,3 +590,4 @@ kubectl patch svc proxy-public -n ai-team \
 | [JupyterHub 다중 접속 장애 및 서비스 재설계 ⭐](docs/incidents/4_01_JupyterHub_다중_접속_장애_및_서비스_설계_개선.md)             | port-forward 제거 · MetalLB IP 재설계 · 공용/관리자 접속 분리              |
 | [Grafana 대시보드 미표시 및 RBAC 권한 문제](docs/incidents/4_01_Grafana_대시보드_미표시_및_RBAC_권한_문제.md)                 | 물리 네트워크 단절 + RBAC 권한 부족 동시 진단                                |
 | [Alertmanager Silence — DaemonSet 오탐 억제](docs/incidents/4_09_Alertmanager_Silence_DaemonSet_알람_억제.md) | continuous-image-puller 오탐 분석 · PrometheusRule 대신 Silence 적용 |
+| [이미지화 장애 3건 ⭐](docs/incidents/4_16_incidents_이미지화_장애_3건.md) | containerd namespace 격리 · ConfigMap read-only 충돌 · nodeSelector 범위 불일치 |

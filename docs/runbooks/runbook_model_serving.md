@@ -8,14 +8,14 @@
 
 ---
 
-## 현재 배포 대상
+## 1. 📋 현재 배포 대상
 
 | 항목 | 내용 |
 |---|---|
 | 엔드포인트 | `POST /predict-demo` (COCO) · `POST /predict` (champion) · `GET /health` |
-| 배포 이미지 | `yolov8-serving:local-v1` |
-| 이미지 저장 위치 | 2080ti-gpu-04 로컬 containerd (`k8s.io` namespace) |
-| 배포 노드 | 2080ti-gpu-04 (`kubernetes.io/hostname` 고정) |
+| 배포 이미지 | `1jkim/yolov8-serving:v1` (DockerHub public) |
+| 이미지 저장 위치 | DockerHub — 모든 노드에서 자동 pull 가능 |
+| 배포 노드 | 2080Ti 풀 자동 스케줄 (`gpu-type: 2080ti`, hostname 고정 없음) |
 | GPU | 2080Ti × 1 |
 | 추론 속도 | 77ms |
 | 접속 | `http://TAILSCALE-IP:30600` (Tailscale) |
@@ -33,11 +33,11 @@
 
 > **설계 원칙:** 추론은 2080Ti 1장, 학습은 V100 4장 전용으로 역할 분리. V100을 학습 Job 예약 자원으로 보존.
 
-> ⚠️ **이미지 위치 주의:** `yolov8-serving:local-v1`은 2080ti-gpu-04 로컬에만 존재. DockerHub 미push 상태. Pod 재스케줄 또는 노드 교체 시 아래 [이미지 관리] 섹션 참조.
+> **이미지 관리:** `1jkim/yolov8-serving:v1` (DockerHub public). 모든 2080Ti 노드에서 자동 pull. 코드 변경 시 이미지 재빌드 후 DockerHub push → Deployment 이미지 교체로 반영.
 
 ---
 
-## 사전 점검
+## 2. ✅ 사전 점검
 
 배포 또는 재배포 전 아래 항목을 확인한다.
 
@@ -55,46 +55,18 @@ kubectl get deploy,svc -n ai-team | grep yolov8
 
 # 4. NFS StorageClass 정상 여부
 kubectl get storageclass
-
-# 5. 서빙 노드 이미지 존재 확인
-ssh ubuntu@112.76.56.156 \
-  'sudo nerdctl --namespace k8s.io images | grep yolov8-serving'
 ```
 
 ---
 
-## 이미지 관리
+## 3. 🐳 이미지 관리
 
-### 이미지 존재 확인
-
-```bash
-ssh ubuntu@112.76.56.156 \
-  'sudo nerdctl --namespace k8s.io images | grep yolov8-serving'
-# 기대값: yolov8-serving   local-v1   ...   13.7GiB
-```
-
-### 이미지 유실 시 재load
-
-Pod 재스케줄 또는 노드 교체 후 ImagePullBackOff 발생 시 실행한다.
+### 현재 이미지 확인
 
 ```bash
-# tar 파일 위치 확인 (master-01)
-ls -lh ~/image-export/yolov8-serving-local-v1.tar
-
-# 서빙 노드로 재전송
-scp ~/image-export/yolov8-serving-local-v1.tar ubuntu@112.76.56.156:/tmp/
-
-# k8s.io namespace로 load — 이 옵션 없으면 K8s가 이미지를 인식하지 못함
-ssh ubuntu@112.76.56.156 \
-  'sudo nerdctl --namespace k8s.io load -i /tmp/yolov8-serving-local-v1.tar'
-
-# 확인
-ssh ubuntu@112.76.56.156 \
-  'sudo nerdctl --namespace k8s.io images | grep yolov8-serving'
-
-# Pod 재시작으로 이미지 재반영
-kubectl rollout restart deployment/yolov8-serving -n ai-team
-kubectl rollout status deployment/yolov8-serving -n ai-team
+kubectl get deploy yolov8-serving -n ai-team \
+  -o jsonpath='{.spec.template.spec.containers[0].image}{"\n"}'
+# 기대값: 1jkim/yolov8-serving:v1
 ```
 
 ### 이미지 재빌드 (코드 변경 시)
@@ -103,26 +75,28 @@ kubectl rollout status deployment/yolov8-serving -n ai-team
 # master-01에서 buildkitd 실행 확인
 pgrep buildkitd || sudo nohup /usr/local/bin/buildkitd >/tmp/buildkitd.log 2>&1 &
 
-# 빌드 (버전 번호 올릴 것)
+# 코드 수정 후 이미지 재빌드 (버전 번호 올릴 것)
 cd ~/serving-image
+# main.py 수정
 sudo nerdctl build -t yolov8-serving:local-v2 .
-sudo nerdctl save -o ~/image-export/yolov8-serving-local-v2.tar yolov8-serving:local-v2
 
-# 서빙 노드 load
-scp ~/image-export/yolov8-serving-local-v2.tar ubuntu@112.76.56.156:/tmp/
-ssh ubuntu@112.76.56.156 \
-  'sudo nerdctl --namespace k8s.io load -i /tmp/yolov8-serving-local-v2.tar'
+# DockerHub 태그 및 push
+sudo nerdctl tag yolov8-serving:local-v2 1jkim/yolov8-serving:v2
+sudo nerdctl push 1jkim/yolov8-serving:v2
 
 # Deployment 이미지 교체
-kubectl set image deployment/yolov8-serving serving=yolov8-serving:local-v2 -n ai-team
+kubectl set image deployment/yolov8-serving serving=1jkim/yolov8-serving:v2 -n ai-team
 kubectl rollout status deployment/yolov8-serving -n ai-team
 ```
 
+> **buildkitd 주의:** 현재 nohup 백그라운드 실행 중. master-01 재부팅 시 수동 재실행 필요.
+> ```bash
+> sudo nohup /usr/local/bin/buildkitd >/tmp/buildkitd.log 2>&1 &
+> ```
+
 ---
 
-## 배포 절차 (신규 또는 전체 재배포)
-
-> **전제:** 이미지가 2080ti-gpu-04 k8s.io namespace에 load되어 있어야 한다. 위 [이미지 관리] 섹션 먼저 실행.
+## 4. 🚀 배포 절차 (신규 또는 전체 재배포)
 
 ```bash
 kubectl apply -f - <<'EOF'
@@ -144,10 +118,9 @@ spec:
     spec:
       nodeSelector:
         gpu-type: 2080ti
-        kubernetes.io/hostname: 2080ti-gpu-04
       containers:
       - name: serving
-        image: yolov8-serving:local-v1
+        image: 1jkim/yolov8-serving:v1
         ports:
         - containerPort: 8080
         resources:
@@ -197,7 +170,7 @@ EOF
 
 ---
 
-## 검증 절차
+## 5. 🔍 검증 절차
 
 ```bash
 # 1. Pod Running 확인
@@ -226,7 +199,7 @@ curl -s -X POST http://TAILSCALE-IP:30600/predict \
 
 ---
 
-## 롤백 절차
+## 6. ↩️ 롤백 절차
 
 ```bash
 # 이전 버전으로 롤백
@@ -241,7 +214,7 @@ kubectl rollout undo deployment/yolov8-serving -n ai-team --to-revision=N
 
 ---
 
-## 장애 대응
+## 7. 🚨 장애 대응
 
 ### Pod가 Running이 되지 않는 경우
 
@@ -252,11 +225,10 @@ kubectl logs -n ai-team -l app=yolov8-serving --tail=50
 
 | 증상 | 원인 | 조치 |
 |---|---|---|
-| `ImagePullBackOff` | k8s.io namespace에 이미지 없음 | [이미지 유실 시 재load] 섹션 실행 |
+| `ImagePullBackOff` | DockerHub 접근 불가 또는 이미지명 오타 | `kubectl describe pod` 에러 확인, 네트워크 상태 점검 |
 | `CrashLoopBackOff` | 코드 오류 또는 볼륨 마운트 문제 | `kubectl logs` 에러 확인 |
-| `Pending` | 2080ti-gpu-04 GPU 자원 없음 | `kubectl get pods -n ai-team -o wide`로 점유 Pod 확인 |
+| `Pending` | 2080Ti GPU 자원 없음 | `kubectl get pods -n ai-team -o wide`로 점유 Pod 확인 |
 | `OOMKilled` | GPU 메모리 부족 | 다른 2080Ti Pod 점유 확인 후 정리 |
-| progress deadline 초과 | nodeSelector 미고정으로 다른 노드 스케줄 | `kubernetes.io/hostname=2080ti-gpu-04` nodeSelector 확인 |
 
 ### 웹캠 접근 불가 (HTTP 환경)
 
@@ -296,7 +268,7 @@ kubectl rollout restart deployment/yolov8-serving -n ai-team
 
 ---
 
-## [Superseded] 이전 배포 방식
+## 8. 🗃️ [Superseded] 이전 배포 방식
 
 > **2026-04-16 이전 방식. 현재 미사용.**
 

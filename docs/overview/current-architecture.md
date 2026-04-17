@@ -6,7 +6,7 @@
 
 ---
 
-## 노드 구성
+## 1. 🖥️ 노드 구성
 
 | 노드            | 역할                 | GPU        | IP                                      |
 | ------------- | ------------------ | ---------- | --------------------------------------- |
@@ -26,7 +26,7 @@
 
 ---
 
-## 네트워크 구조
+## 2. 🌐 네트워크 구조
 
 ```
 [외부 접속]
@@ -46,7 +46,7 @@
 
 ---
 
-## 스토리지
+## 3. 💾 스토리지
 
 | 항목 | 내용 |
 |---|---|
@@ -59,7 +59,7 @@
 
 ---
 
-## 서비스 현황
+## 4. 🔌 서비스 현황
 
 | 서비스                 | 네임스페이스     | 접속 주소                       | 상태  |
 | ------------------- | ---------- | --------------------------- | --- |
@@ -74,7 +74,7 @@
 
 ---
 
-## JupyterHub
+## 5. 📓 JupyterHub
 
 - **Helm Chart:** 4.3.3
 - **이미지:** `cschranz/gpu-jupyter:v1.6_cuda-12.0_ubuntu-22.04`
@@ -87,7 +87,7 @@
 
 ---
 
-## ML 파이프라인 (Argo Workflows)
+## 6. 🔄 ML 파이프라인 (Argo Workflows)
 
 ```
 [Git push → GitHub Actions (Self-hosted Runner on master-01)]
@@ -115,7 +115,7 @@
 
 ---
 
-## MLflow
+## 7. 📊 MLflow
 
 - **Backend:** PostgreSQL (K8s Deployment + NFS PVC)
 - **Artifact 저장소:** NFS PVC → NAS `/data/mlflow-artifacts/`
@@ -128,7 +128,7 @@
 
 ---
 
-## 모델 서빙 (FastAPI)
+## 8. 🚀 모델 서빙 (FastAPI)
 
 - **배포 방식:** K8s Deployment (ai-team 네임스페이스)
 - **배포 이미지:** `1jkim/yolov8-serving:v1` (DockerHub public) — 2026-04-17 전환
@@ -193,7 +193,7 @@ MLflow alias "champion" 조회
 
 ---
 
-## CI/CD
+## 9. ⚙️ CI/CD
 
 ```
 [개발자] → git push → main
@@ -213,7 +213,7 @@ MLflow alias "champion" 조회
 
 ---
 
-## 모니터링
+## 10. 📡 모니터링
 
 | 항목         | 내용                                         |
 | ---------- | ------------------------------------------ |
@@ -225,7 +225,7 @@ MLflow alias "champion" 조회
 
 ---
 
-## 백업 / DR
+## 11. 🔒 백업 / DR
 
 - **방식:** 호스트 crontab (K8s CronJob 아님 — 클러스터 장애 시 CronJob도 불가하므로)
 - **스케줄:** 매일 02:00
@@ -236,13 +236,13 @@ MLflow alias "champion" 조회
 
 ---
 
-## 미해결 과제 / 한계
+## 12. ⚠️ 미해결 과제 / 한계
 
-| 항목 | 현황 | 비고 |
-|---|---|---|
-| HTTPS / Ingress | 미적용 | 웹캠 HTTP 제약 존재. TLS 적용 예정 |
-| JupyterHub 인증 | DummyAuthenticator | GitHub OAuth 교체 예정 |
-| 서빙 이미지 레지스트리 | 로컬 보관 | DockerHub push 미완료. 노드 교체 시 재load 필요 |
-| ResourceQuota | 미적용 | 팀원 GPU 점유 제한 없음 |
-| K8s 업그레이드 | v1.29 (EOL 예정) | v1.31 업그레이드 runbook 작성 예정, 실작업 미진행 |
-| buildkitd 서비스 등록 | nohup 백그라운드 | master-01 재부팅 시 재실행 필요 |
+| 항목               | 현황                 | 비고                                                              |
+| ---------------- | ------------------ | --------------------------------------------------------------- |
+| HTTPS / Ingress  | 미적용                | 웹캠 HTTP 제약 존재. TLS 적용 예정                                        |
+| JupyterHub 인증    | DummyAuthenticator | GitHub OAuth 교체 예정                                              |
+| 서빙 이미지 레지스트리     | DockerHub public   | `1jkim/yolov8-serving:v1` push 완료 (2026-04-17). 전 노드 자동 pull 가능 |
+| ResourceQuota    | 미적용                | 팀원 GPU 점유 제한 없음                                                 |
+| K8s 업그레이드        | v1.29 (EOL 예정)     | v1.31 업그레이드 runbook 작성 예정, 실작업 미진행                              |
+| buildkitd 서비스 등록 | nohup 백그라운드        | master-01 재부팅 시 재실행 필요                                          |

@@ -7,7 +7,7 @@
 
 ---
 
-## 현재 배포 대상
+## 1. 📋 현재 배포 대상
 
 | 항목 | 내용 |
 |---|---|
@@ -40,7 +40,7 @@
 
 ---
 
-## 사전 점검
+## 2. ✅ 사전 점검
 
 ```bash
 # 1. Argo Workflows Controller 상태
@@ -67,7 +67,7 @@ ls /data/datasets/visdrone/VisDrone2019-DET-val/images | wc -l
 
 ---
 
-## 실행 절차
+## 3. ▶️ 실행 절차
 
 ### Argo UI에서 실행 (권장)
 
@@ -118,7 +118,7 @@ kubectl apply -f yolov8-dag-pipeline.yaml
 
 ---
 
-## WorkflowTemplate YAML
+## 4. 📄 WorkflowTemplate YAML
 
 ```yaml
 apiVersion: argoproj.io/v1alpha1
@@ -285,7 +285,7 @@ spec:
 
 ---
 
-## 검증 절차
+## 5. 🔍 검증 절차
 
 ```bash
 # 1. Workflow 실행 상태 확인
@@ -315,7 +315,7 @@ cat /data/datasets/runs/dag-train/eval_result.txt
 
 ---
 
-## 롤백 절차
+## 6. ↩️ 롤백 절차
 
 ### 특정 단계만 재실행
 
@@ -346,7 +346,7 @@ kubectl apply -f yolov8-dag-pipeline-prev.yaml
 
 ---
 
-## 장애 대응
+## 7. 🚨 장애 대응
 
 ### Workflow가 Pending에서 진행되지 않는 경우
 

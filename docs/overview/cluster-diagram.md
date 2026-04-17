@@ -1,11 +1,11 @@
 # 클러스터 구조 다이어그램
 
-> **기준일:** 2026-04-15
+> **기준일:** 2026-04-17
 > **K8s:** v1.29.15 / Ubuntu 22.04.5 LTS / Calico v3.27
 
 ---
 
-## 1. 노드 구성 및 역할 분리
+## 1. 🖥️ 노드 구성 및 역할 분리
 
 | 노드 | 역할 | 배치 파드 / 용도 | GPU | IP |
 |---|---|---|---|---|
@@ -22,7 +22,7 @@
 
 ---
 
-## 2. 네트워크 토폴로지
+## 2. 🌐 네트워크 토폴로지
 
 ```mermaid
 graph TD
@@ -64,7 +64,7 @@ graph TD
 
 ---
 
-## 3. ML 파이프라인 흐름
+## 3. 🔄 ML 파이프라인 흐름
 
 ```mermaid
 graph LR
@@ -118,7 +118,7 @@ graph LR
 
 ---
 
-## 4. 서비스 맵
+## 4. 🔌 서비스 맵
 
 ```mermaid
 graph TD
@@ -171,7 +171,7 @@ graph TD
 
 ---
 
-## 5. 스토리지 구조
+## 5. 💾 스토리지 구조
 
 ```mermaid
 graph TD
@@ -223,3 +223,4 @@ graph TD
 | 2026-03-31 | master-01 NoSchedule taint 적용, master-02 시스템 파드 전담 설계 확정 |
 | 2026-04-13 | MLflow, GitHub Actions CI/CD, etcd DR 검증 반영 |
 | 2026-04-15 | FastAPI champion serving, MLflow alias 기반 운영 흐름 반영 |
+| 2026-04-17 | 서빙 이미지 DockerHub 전환 (`1jkim/yolov8-serving:v1`), nodeSelector hostname 고정 제거 반영 |
