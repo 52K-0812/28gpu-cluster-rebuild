@@ -1,31 +1,28 @@
 # Runbook — FastAPI YOLOv8 모델 서빙
 
-> **목적:** YOLOv8 추론 서버의 배포 · 이미지 관리 · 검증 · 장애 대응 절차
-> **최초 구축:** 2026-04-13
-> **이미지화 전환:** 2026-04-16
-> **관리 네임스페이스:** `ai-team`
-> **담당:** 관리자 (master-01)
+> **목적:** YOLOv8 추론 서버의 배포 · 이미지 관리 · 검증 · 장애 대응 절차 **최초 구축:** 2026-04-13 **이미지화 전환:** 2026-04-16 **관리 네임스페이스:** `ai-team` **담당:** 관리자 (master-01)
 
 ---
 
 ## 1. 📋 현재 배포 대상
 
-| 항목 | 내용 |
-|---|---|
-| 엔드포인트 | `POST /predict-demo` (COCO) · `POST /predict` (champion) · `GET /health` |
-| 배포 이미지 | `1jkim/yolov8-serving:v1` (DockerHub public) |
-| 이미지 저장 위치 | DockerHub — 모든 노드에서 자동 pull 가능 |
-| 배포 노드 | 2080Ti 풀 자동 스케줄 (`gpu-type: 2080ti`, hostname 고정 없음) |
-| GPU | 2080Ti × 1 |
-| 추론 속도 | 77ms |
-| 접속 | `http://TAILSCALE-IP:30600` (Tailscale) |
+| 항목        | 내용                                                                       |
+| --------- | ------------------------------------------------------------------------ |
+| 엔드포인트     | `POST /predict-demo` (COCO) · `POST /predict` (champion) · `GET /health` |
+| 배포 이미지    | `1jkim/yolov8-serving:v1` (DockerHub public)                             |
+| 이미지 저장 위치 | DockerHub — 모든 노드에서 자동 pull 가능                                           |
+| 배포 노드     | 2080Ti 풀 자동 스케줄 (`gpu-type: 2080ti`, hostname 고정 없음)                     |
+| GPU       | 2080Ti × 1                                                               |
+| 추론 속도     | 77ms                                                                     |
+| 접속        | `http://TAILSCALE-IP:30600` (Tailscale)                                  |
 
 **서빙 구조:**
+
 ```
 [브라우저]
     │ 웹캠 캡처 or 이미지 업로드
     ▼
-[FastAPI 웹 UI — ai-team 네임스페이스 / 2080ti-gpu-04]
+[FastAPI 웹 UI — ai-team 네임스페이스 / 2080Ti GPU 노드 (자동 스케줄)]
     ├→ POST /predict-demo → YOLOv8n COCO 80클래스 추론
     └→ POST /predict      → visdrone-yolov8@champion 추론
     └→ 바운딩박스 + 클래스명 + confidence 반환
@@ -45,8 +42,8 @@
 # 1. 네임스페이스 확인
 kubectl get ns ai-team
 
-# 2. 2080ti-gpu-04 GPU 가용량 확인
-kubectl get node 2080ti-gpu-04 -o custom-columns=\
+# 2. 2080Ti 풀 전체 GPU 가용량 확인
+kubectl get nodes -l gpu-type=2080ti -o custom-columns=\
 NAME:.metadata.name,\
 GPU:.status.allocatable."nvidia\.com/gpu"
 
@@ -90,6 +87,7 @@ kubectl rollout status deployment/yolov8-serving -n ai-team
 ```
 
 > **buildkitd 주의:** 현재 nohup 백그라운드 실행 중. master-01 재부팅 시 수동 재실행 필요.
+> 
 > ```bash
 > sudo nohup /usr/local/bin/buildkitd >/tmp/buildkitd.log 2>&1 &
 > ```
@@ -175,7 +173,7 @@ EOF
 ```bash
 # 1. Pod Running 확인
 kubectl get pods -n ai-team -l app=yolov8-serving -o wide
-# 기대값: 1/1 Running / 2080ti-gpu-04
+# 기대값: 1/1 Running / 2080Ti 풀 내 임의 노드
 
 # 2. 서버 기동 로그 확인
 kubectl logs -n ai-team -l app=yolov8-serving --tail=10
@@ -223,21 +221,23 @@ kubectl describe pod -n ai-team -l app=yolov8-serving | tail -30
 kubectl logs -n ai-team -l app=yolov8-serving --tail=50
 ```
 
-| 증상 | 원인 | 조치 |
+|증상|원인|조치|
 |---|---|---|
-| `ImagePullBackOff` | DockerHub 접근 불가 또는 이미지명 오타 | `kubectl describe pod` 에러 확인, 네트워크 상태 점검 |
-| `CrashLoopBackOff` | 코드 오류 또는 볼륨 마운트 문제 | `kubectl logs` 에러 확인 |
-| `Pending` | 2080Ti GPU 자원 없음 | `kubectl get pods -n ai-team -o wide`로 점유 Pod 확인 |
-| `OOMKilled` | GPU 메모리 부족 | 다른 2080Ti Pod 점유 확인 후 정리 |
+|`ImagePullBackOff`|DockerHub 접근 불가 또는 이미지명 오타|`kubectl describe pod` 에러 확인, 네트워크 상태 점검|
+|`CrashLoopBackOff`|코드 오류 또는 볼륨 마운트 문제|`kubectl logs` 에러 확인|
+|`Pending`|2080Ti GPU 자원 없음|`kubectl get pods -n ai-team -o wide`로 점유 Pod 확인|
+|`OOMKilled`|GPU 메모리 부족|다른 2080Ti Pod 점유 확인 후 정리|
 
 ### 웹캠 접근 불가 (HTTP 환경)
 
 브라우저 `getUserMedia()` API는 HTTPS 또는 localhost에서만 동작한다. HTTP 접속 시 카메라 권한이 차단된다.
 
 **임시 해결 (Chrome 플래그):**
+
 ```
 chrome://flags/#unsafely-treat-insecure-origin-as-secure
 ```
+
 `http://TAILSCALE-IP:30600` 추가 → Enabled → Chrome 재시작
 
 > **근본 해결:** Ingress + TLS 적용 (미완료, 다음 작업 예정)
@@ -284,6 +284,7 @@ volumeMounts:
 ```
 
 **문제점:**
+
 - Pod 재시작마다 pip install 재실행 (약 2~3분 지연)
 - 네트워크 장애 시 의존성 설치 실패로 서비스 불가
 - ConfigMap `/app` 마운트 read-only로 인해 모델 파일 다운로드 실패
