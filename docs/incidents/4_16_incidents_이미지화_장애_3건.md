@@ -51,11 +51,11 @@ containerd namespace
 
 ```bash
 # k8s.io namespace로 재load
-ssh ubuntu@112.76.56.156 \
+ssh ubuntu@WORKER-IP \
   'sudo nerdctl --namespace k8s.io load -i /tmp/yolov8-serving-local-v1.tar'
 
 # 확인
-ssh ubuntu@112.76.56.156 \
+ssh ubuntu@WORKER-IP \
   'sudo nerdctl --namespace k8s.io images | grep yolov8-serving'
 ```
 

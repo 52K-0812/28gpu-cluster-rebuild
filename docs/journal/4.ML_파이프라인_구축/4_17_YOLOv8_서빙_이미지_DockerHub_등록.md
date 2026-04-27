@@ -128,10 +128,10 @@ kubectl get pod -n ai-team -l app=yolov8-serving \
   -o jsonpath='{.items[0].spec.containers[0].image}{"\n"}'
 # 1jkim/yolov8-serving:v1
 
-curl -s http://112.76.56.156:30600/health
+curl -s http://WORKER-NODE-IP:SERVING-NODEPORT/health
 # {"status":"ok","demo_model":"yolov8n-coco (80 classes)","champion_ready":true,"champion_version":"5"}
 
-curl -s -X POST http://112.76.56.156:30600/predict \
+curl -s -X POST http://WORKER-NODE-IP:SERVING-NODEPORT/predict \
   -F "file=@/home/ubuntu/actions-runner/.../basic.png" \
   | python3 -c 'import sys,json; d=json.load(sys.stdin); print(d.get("model"), d.get("count"))'
 # visdrone-yolov8@champion (v5) 0
@@ -160,7 +160,7 @@ kubectl get pod -n ai-team -l app=yolov8-serving \
 # 1jkim/yolov8-serving:v1
 # {"gpu-type":"2080ti"}
 
-curl -s http://112.76.56.156:30600/health
+curl -s http://WORKER-NODE-IP:SERVING-NODEPORT/health
 # {"status":"ok","demo_model":"yolov8n-coco (80 classes)","champion_ready":true,"champion_version":"5"}
 ```
 
@@ -171,9 +171,6 @@ curl -s http://112.76.56.156:30600/health
 | nodeSelector | `{"gpu-type":"2080ti"}` (hostname 고정 없음) |
 | `/health`    | champion_ready=true, version=5           |
 | `/predict`   | visdrone-yolov8@champion (v5) 정상         |
-|              |                                          |
-
-![웹 페이지](../../images/스크린샷%202026-04-15%20172900%201.png)
 
 ---
 

@@ -70,8 +70,8 @@ sudo nerdctl version
 
 ```bash
 # master-01에서 실행
-scp /tmp/nerdctl-1.7.6-linux-amd64.tar.gz ubuntu@112.76.56.156:/tmp/
-ssh ubuntu@112.76.56.156 \
+scp /tmp/nerdctl-1.7.6-linux-amd64.tar.gz ubuntu@WORKER-IP:/tmp/
+ssh ubuntu@WORKER-IP \
   'sudo tar -xf /tmp/nerdctl-1.7.6-linux-amd64.tar.gz -C /usr/local/bin/ && \
    sudo nerdctl version'
 ```
@@ -126,10 +126,10 @@ sudo nerdctl save -o ~/image-export/yolov8-serving-local-v1.tar yolov8-serving:l
 # 결과: 6.2GB
 
 # 서빙 노드로 전송
-scp ~/image-export/yolov8-serving-local-v1.tar ubuntu@112.76.56.156:/tmp/
+scp ~/image-export/yolov8-serving-local-v1.tar ubuntu@WORKER-IP:/tmp/
 
 # k8s.io namespace로 load — 이 옵션이 없으면 K8s가 이미지를 인식하지 못함
-ssh ubuntu@112.76.56.156 \
+ssh ubuntu@WORKER-IP \
   'sudo nerdctl --namespace k8s.io load -i /tmp/yolov8-serving-local-v1.tar && \
    sudo nerdctl --namespace k8s.io images | grep yolov8-serving'
 ```
@@ -184,11 +184,11 @@ kubectl get pods -n ai-team -l app=yolov8-serving -o wide
 # 기대값: Running / 2080ti-gpu-04
 
 # health 확인
-curl -s http://112.76.56.156:30600/health
+curl -s http://WORKER-IP:SERVING-NODEPORT/health
 # {"status":"ok","demo_model":"yolov8n-coco (80 classes)","champion_ready":true,"champion_version":"5"}
 
 # /predict 추론 확인
-curl -s -X POST http://112.76.56.156:30600/predict -F "file=@test.png" | \
+curl -s -X POST http://WORKER-IP:SERVING-NODEPORT/predict -F "file=@test.png" | \
   python3 -c 'import sys,json; d=json.load(sys.stdin); print(d.get("model"), d.get("count"))'
 # visdrone-yolov8@champion (v5)  0
 ```

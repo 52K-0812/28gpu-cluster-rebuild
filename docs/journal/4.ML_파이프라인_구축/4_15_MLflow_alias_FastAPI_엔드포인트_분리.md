@@ -159,7 +159,7 @@ MLflow Registry version 번호와 NAS 파일명이 우연히 일치하는 현재
 # ai-team 전용 PV — mlflow와 동일한 NFS 경로
 spec:
   nfs:
-    server: 112.76.56.157
+    server: WORKER-IP
     path: /data/mlflow-mlflow-artifacts-pvc-pvc-a64b9480-a981-411f-a248-a26e232f5961
 ```
 
