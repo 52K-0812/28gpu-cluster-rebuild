@@ -383,3 +383,6 @@ kubectl apply -f yolov8-dag-pipeline.yaml
 kubectl rollout restart deployment/workflow-controller -n argo
 kubectl get pods -n argo -w
 ```
+
+## 8.참고 사진
+![](../images/스크린샷%202026-04-07%20172757.png)

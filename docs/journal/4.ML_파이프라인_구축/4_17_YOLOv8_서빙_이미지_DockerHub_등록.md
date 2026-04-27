@@ -164,13 +164,16 @@ curl -s http://112.76.56.156:30600/health
 # {"status":"ok","demo_model":"yolov8n-coco (80 classes)","champion_ready":true,"champion_version":"5"}
 ```
 
-| 항목 | 결과 |
-|---|---|
-| Pod 상태 | Running / 2080ti-gpu-04 |
-| 이미지 | `1jkim/yolov8-serving:v1` |
+| 항목           | 결과                                       |
+| ------------ | ---------------------------------------- |
+| Pod 상태       | Running / 2080ti-gpu-04                  |
+| 이미지          | `1jkim/yolov8-serving:v1`                |
 | nodeSelector | `{"gpu-type":"2080ti"}` (hostname 고정 없음) |
-| `/health` | champion_ready=true, version=5 |
-| `/predict` | visdrone-yolov8@champion (v5) 정상 |
+| `/health`    | champion_ready=true, version=5           |
+| `/predict`   | visdrone-yolov8@champion (v5) 정상         |
+|              |                                          |
+
+![웹 페이지](../../images/스크린샷%202026-04-15%20172900%201.png)
 
 ---
 
@@ -192,4 +195,3 @@ curl -s http://112.76.56.156:30600/health
 
 **hostname nodeSelector는 로컬 이미지 의존성이 사라지는 시점에 즉시 제거해야 한다.** 이미지가 레지스트리에 올라간 이후에도 hostname 고정이 남아 있으면 해당 노드 장애 시 서비스가 복구되지 않는다.
 
-![](../../images/스크린샷%202026-04-17%20004316.png)
