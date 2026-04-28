@@ -94,21 +94,18 @@
 
 ---
 
-### [불일치] C-1 — JupyterHub backup 파일 권한 664 (보안 위험)
+### ~~[불일치] C-1 — JupyterHub backup 파일 권한 664 (보안 위험)~~ ✅ 해소 (2026-04-28)
 
 - **발견 위치:** `/home/ubuntu/backup/jupyterhub/*.yaml`
-- **현재 상태:**
+- **조치 전 상태:** 권한 `664` — 같은 그룹 사용자가 읽기 가능. `proxy.secretToken` 평문 포함.
+- **조치 내용:** `chmod 600 ~/backup/jupyterhub/*.yaml` 실행 완료
+- **조치 후 상태:**
   ```
-  -rw-rw-r-- ubuntu ubuntu  values-before-add-members-20260427-0924.yaml
-  -rw-rw-r-- ubuntu ubuntu  values-before-ingress-host-tls.yaml
-  -rw-rw-r-- ubuntu ubuntu  values-before-oauth-20260427-0807.yaml
+  -rw------- ubuntu ubuntu  values-before-add-members-20260427-0924.yaml
+  -rw------- ubuntu ubuntu  values-before-ingress-host-tls.yaml
+  -rw------- ubuntu ubuntu  values-before-oauth-20260427-0807.yaml
   ```
-  권한 `664` — 같은 그룹 사용자가 읽기 가능. `proxy.secretToken` 평문 포함.
-- **수정 제안:**
-  ```bash
-  chmod 600 ~/backup/jupyterhub/*.yaml
-  ```
-  이후 신규 백업 시에도 `chmod 600`을 습관화하거나 백업 스크립트에 포함.
+- **잔여 과제:** 신규 백업 생성 시에도 `600` 유지되도록 백업 스크립트에 `chmod 600` 추가 권고.
 
 ---
 
@@ -159,17 +156,17 @@ current-architecture.md 해당 섹션에 추가를 권고한다.
 
 ---
 
-### [주의] A-8 — etcd crontab 등록 계정 불명확
+### ~~[주의] A-8 — etcd crontab 등록 계정 불명확~~ ✅ 확인 완료 (2026-04-28)
 
-`crontab -l` (ubuntu 계정) 결과 `no crontab for ubuntu`. 그러나 백업 파일이 2026-04-28 02:00까지 정상 생성 중이므로 root 계정 crontab 또는 systemd timer로 운영 중인 것으로 추정된다.
+`sudo crontab -l` 실행 결과 root 계정 crontab에 등록 확인:
 
-**확인 명령:**
-```bash
-sudo crontab -l          # root crontab 확인
-systemctl list-timers    # systemd timer 확인
+```
+0 2 * * * /usr/local/bin/etcd-backup.sh >> /var/log/etcd-backup.log 2>&1
 ```
 
-문서(current-architecture.md §13, runbook_etcd_restore.md)에 "호스트 crontab"으로만 기재되어 있으나 실제 등록 계정이 명시되지 않았다. 확인 후 문서에 `sudo crontab` 또는 `systemd timer` 명시를 권고한다.
+매일 02:00 root 권한으로 실행 중. ubuntu 계정 crontab이 비어있었던 것은 root로 등록했기 때문. 정상 운영 중.
+
+**문서 반영 필요:** `current-architecture.md §13`, `runbook_etcd_restore.md`의 "호스트 crontab" 표현을 "root crontab (`sudo crontab -e`)"으로 명시 권고.
 
 ---
 
@@ -241,13 +238,9 @@ current-architecture.md 등에 `<MASTER-IP>`, `<LB-INGRESS-IP>` 등 플레이스
 
 ## 즉시 조치 권고 (보안 / 운영 위험)
 
-### 🔴 보안 위험 — backup 파일 권한 즉시 수정
+### ~~🔴 보안 위험 — backup 파일 권한 즉시 수정~~ ✅ 완료 (2026-04-28)
 
-```bash
-chmod 600 ~/backup/jupyterhub/*.yaml
-```
-
-`proxy.secretToken`이 평문으로 포함된 파일이 `664` 권한으로 저장되어 있다. 같은 그룹 계정이 접근 가능한 상태이며, github Actions runner(ubuntu 계정)와 동일 사용자이므로 즉시 600으로 변경해야 한다.
+`chmod 600 ~/backup/jupyterhub/*.yaml` 실행 완료. 3개 파일 모두 `-rw-------` 확인.
 
 ---
 
@@ -272,9 +265,9 @@ spec:
 
 ---
 
-### 🟡 운영 위험 — etcd crontab 등록 계정 확인 필요
+### ~~🟡 운영 위험 — etcd crontab 등록 계정 확인 필요~~ ✅ 확인 완료 (2026-04-28)
 
-ubuntu 계정 crontab이 비어있으나 백업은 정상 실행 중. `sudo crontab -l`로 root 계정을 확인하고, 실제 등록된 계정을 runbook_etcd_restore.md에 명시해야 한다. 재부팅 후 백업 스케줄이 살아있는지 검증 필요.
+root crontab에 `0 2 * * * /usr/local/bin/etcd-backup.sh` 등록 확인. 정상 운영 중.
 
 ---
 
