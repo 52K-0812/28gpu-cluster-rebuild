@@ -304,7 +304,7 @@ MLflow alias "champion" 조회
 
 ## 13. 🔒 백업 / DR
 
-- **방식:** 호스트 crontab (K8s CronJob 아님 — 클러스터 장애 시 CronJob도 불가하므로)
+- **방식:** root crontab on master-01 (`sudo crontab -e`, K8s CronJob 아님 — 클러스터 장애 시 CronJob도 불가하므로)
 - **스케줄:** 매일 02:00
 - **저장:** NAS `/data/backups/etcd/` (10GbE)
 - **보존:** 7일 자동 삭제

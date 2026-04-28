@@ -12,14 +12,14 @@
 | 항목 | 내용 |
 |---|---|
 | etcd 버전 | v3.5.16 (kubeadm v1.29 기본 설치) |
-| 백업 방식 | 호스트 crontab (K8s 장애 시에도 독립 동작) |
+| 백업 방식 | root crontab on master-01 (`sudo crontab -e`, K8s 장애 시에도 독립 동작) |
 | 스케줄 | 매일 02:00 (master-01 로컬 시간) |
 | 저장 위치 | NAS `/data/backups/etcd/` (10GbE 마운트) |
 | 보존 기간 | 7일 자동 삭제 |
 | 스냅샷 크기 | ~74MB |
 | 로그 | `/var/log/etcd-backup.log` |
 
-> **설계 원칙:** etcd 백업은 K8s에 의존해서는 안 된다. 클러스터가 죽은 상황에서 복구가 필요하기 때문에, K8s CronJob이 아닌 호스트 crontab으로 자동화한다.
+> **설계 원칙:** etcd 백업은 K8s에 의존해서는 안 된다. 클러스터가 죽은 상황에서 복구가 필요하기 때문에, K8s CronJob이 아닌 root crontab(`sudo crontab -e` on master-01)으로 자동화한다.
 
 ---
 
