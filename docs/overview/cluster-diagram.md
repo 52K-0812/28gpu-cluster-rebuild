@@ -1,6 +1,6 @@
 # 클러스터 구조 다이어그램
 
-> **기준일:** 2026-04-27
+> **기준일:** 2026-04-28
 > **K8s:** v1.29.15 / Ubuntu 22.04.5 LTS / Calico v3.27
 
 ---
@@ -220,6 +220,19 @@ graph TD
 
 ---
 
+## 6. 🔢 PriorityClass 계층 (2026-04-28 도입)
+
+| 클래스명 | value | 적용 대상 |
+|---|---|---|
+| system-cluster-critical | 2,000,000,000 | kube-system 시스템 파드 |
+| serving-critical | 1,000,000 | yolov8-serving |
+| training-normal | 100 | Argo DAG 학습 Job |
+| (default) | 0 | 나머지 모든 파드 |
+
+> **설계 원칙:** serving-critical은 학습 Job보다 항상 선점 우위. 스케줄러가 GPU 부족 시 training-normal Pod를 선점하여 serving Pod 보호.
+
+---
+
 ## 변경 이력
 
 | 날짜 | 변경 내용 |
@@ -229,3 +242,4 @@ graph TD
 | 2026-04-15 | FastAPI champion serving, MLflow alias 기반 운영 흐름 반영 |
 | 2026-04-17 | 서빙 이미지 DockerHub 전환 (`1jkim/yolov8-serving:v1`), 2080ti-gpu-04 hostname nodeSelector 고정 해제 |
 | 2026-04-27 | NGINX Ingress + cert-manager TLS 완료, GitHub OAuth 완료, 서비스 맵 3분류(외부/관리자/내부) 체계로 재편, JupyterHub PVC 사용자별 자동 생성 반영 |
+| 2026-04-28 | PriorityClass 4계층 도입 (serving-critical/training-normal), INC-2026-04-28 Grafana 차트 업그레이드 장애 복구 |

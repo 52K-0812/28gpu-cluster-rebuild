@@ -3,6 +3,7 @@
 > **최종 업데이트:** 2026-04-28
 > **상태:** 운영 중
 > **목적:** 클러스터의 현재 유효한 구조를 한 장으로 정리한 문서. 날짜별 작업 기록은 `journal/`, 운영 절차는 `runbooks/`, 장애 기록은 `incidents/` 참조.
+> **IP 마스킹 정책:** 이 문서의 `<MASTER-IP>`, `<LB-INGRESS-IP>` 등 플레이스홀더는 실제 IP를 공개하지 않기 위해 사용한다. 실제 값은 클러스터 관리자에게 문의.
 
 ---
 
@@ -55,6 +56,7 @@
 |---|---|
 | `<LB-JUPYTERHUB-IP>` | JupyterHub proxy-public (현재 Ingress 백엔드 전환으로 직접 노출 안 함) |
 | `<LB-ARGO-IP>` | Argo Workflows UI |
+| `<LB-MLFLOW-IP>` | MLflow (LoadBalancer, port 5000) |
 | `<LB-INGRESS-IP>` | NGINX Ingress Controller — 외부 진입점 일원화 |
 
 ---
@@ -89,7 +91,7 @@
 | Prometheus | monitoring | NodePort `<MASTER-IP>:30310` | ✅ (내부 전용) |
 | Portainer | portainer | NodePort `<MASTER-IP>:30320` | ✅ |
 | Filebrowser (NAS) | monitoring | NodePort `<MASTER-IP>:30340` | ✅ |
-| MLflow | mlflow | NodePort `<MASTER-IP>:30010` | ✅ |
+| MLflow | mlflow | LoadBalancer `<LB-MLFLOW-IP>:5000` (NodePort 30010 병존) | ✅ |
 | Argo Workflows UI | argo | `<LB-ARGO-IP>:30500` | ✅ |
 
 > **보안 현황:** 관리자 서비스는 현재 캠퍼스 내부망 + Tailscale 접근만 허용. Ingress Phase B에서 Basic Auth 적용 예정.
@@ -128,6 +130,8 @@
 | `ai-datasets` | 공유 데이터셋 (100Gi, RWX) |
 | `mlflow-artifacts-pvc` | MLflow 아티팩트 (100Gi, RWX) |
 | `nfs-datasets-pvc` | NAS 전체 마운트 (500Gi, RWX) |
+| `filebrowser-db-pvc` | Filebrowser SQLite DB (1Gi) |
+| `nfs-pvc-filebrowser` | Filebrowser NFS 공유 (~28Ti, RWX) |
 
 ---
 
@@ -179,15 +183,15 @@
 
 ## 8. 📊 MLflow
 
-- **Backend:** PostgreSQL (K8s Deployment + NFS PVC)
-- **Artifact 저장소:** NFS PVC → NAS `/data/mlflow-artifacts/`
+- **Backend:** PostgreSQL (K8s Deployment + PVC `mlflow-postgres-pvc` 10Gi)
+- **Artifact 저장소:** NFS PVC (`mlflow-artifacts-pvc` 100Gi) → NAS `/data/mlflow-artifacts/`
 - **배포 방식:** kubectl 직접 배포 (Helm 비관리)
 - **Argo 연동:**
   - train 단계: `mlflow.log_params()` (autolog — 105개 자동 기록)
   - evaluate 단계: `mlflow.log_metrics()` + `best.pt` artifact 연동 로직
   - save-model 단계: Registry 등록 + alias "champion" 지정
 - **Model Registry:** `visdrone-yolov8` 모델명, alias 기반 버전 관리
-- **접속:** NodePort `<MASTER-IP>:30010` (관리자 전용, Ingress Phase B 대상)
+- **접속:** LoadBalancer `<LB-MLFLOW-IP>:5000` / NodePort `<MASTER-IP>:30010` (관리자 전용, Ingress Phase B 대상)
 
 ---
 
@@ -288,7 +292,7 @@ MLflow alias "champion" 조회
 | PriorityClass | Value | 적용 대상 |
 |---|---|---|
 | `system-cluster-critical` | 2000000000 | cert-manager, argo-workflows controller/server, Prometheus, Alertmanager, Grafana, kube-state-metrics, Prometheus Operator, ingress-nginx, JupyterHub hub/proxy/user-scheduler, MLflow server/postgres |
-| `serving-critical` | 1000000 | yolov8-serving **(Phase C 적용 예정)** |
+| `serving-critical` | 1000000 | yolov8-serving ✅ **(2026-04-28 적용 완료)** |
 | `training-normal` | 100 | Argo workflow steps **(Phase C 적용 예정)** |
 | (default = 0) | 0 | JupyterHub singleuser, 기타 |
 
@@ -315,7 +319,7 @@ MLflow alias "champion" 조회
 |---|---|---|
 | HTTPS / Ingress | ✅ 적용 완료 | hub / serving Ingress + TLS (nip.io) 운영 중 |
 | JupyterHub 인증 | ✅ GitHub OAuth | GitHubOAuthenticator 전환 완료 (2026-04-27) |
-| PriorityClass 도입 | ✅ 완료 (2026-04-28) | Phase A/B/B-1 완료. Phase C~E 진행 예정 |
+| PriorityClass 도입 | ✅ 완료 (2026-04-28) | Phase A/B/B-1/C(serving) 완료. training-normal(Argo steps) 미적용, LimitRange(D)/ResourceQuota(E) 예정 |
 | **ResourceQuota** | **미적용** | **Phase D/E 예정. 팀원 GPU 점유 제한 없음** |
 | 관리자 서비스 인증 | NodePort 노출, 인증 없음 | Ingress Phase B에서 Basic Auth 적용 예정 (Grafana, MLflow, Argo, Filebrowser) |
 | YOLOv8 Serving 보호 | 인증 없음 | Basic Auth 또는 API Key 적용 예정 |
@@ -339,4 +343,4 @@ MLflow alias "champion" 조회
 | 2026-04-15 | FastAPI champion serving, MLflow alias 기반 운영 흐름 반영 |
 | 2026-04-17 | 서빙 이미지 DockerHub 전환 (`1jkim/yolov8-serving:v1`), 2080ti-gpu-04 hostname nodeSelector 고정 해제 |
 | 2026-04-27 | Ingress + TLS 완료 (NGINX Ingress, cert-manager, cluster-ca self-signed, MetalLB LB-INGRESS-IP), GitHub OAuth 완료 (DummyAuth 제거), 서비스 분류 체계 정비 |
-| 2026-04-28 | PriorityClass 4계층 도입 (Phase A/B/B-1 완료), monitoring chart 버전 82.15.1 고정 운영 결정, Grafana PVC 복구, INC-2026-04-28 발생 및 복구 |
+| 2026-04-28 | PriorityClass 4계층 도입 (Phase A/B/B-1 완료), yolov8-serving serving-critical 적용 완료 (Phase C), monitoring chart 버전 82.15.1 고정 운영 결정, Grafana PVC 복구, INC-2026-04-28 발생 및 복구, MLflow LoadBalancer IP 배정표 추가 |
