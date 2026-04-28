@@ -85,7 +85,7 @@ JupyterHub는 path prefix 변경 시 Hub 재구성이 필요하고 WebSocket 경
 
 ### 3-6. TLS 인증서 정책 — cluster-ca self-signed 유지
 
-Let's Encrypt staging HTTP-01 발급 시도 후 실패 → self-signed 유지 결정. 상세는 §5 트러블슈팅 참고.
+Let's Encrypt staging HTTP-01 발급 시도 후 실패 → self-signed 유지 결정. 상세는 트러블슈팅 참고.
 
 ---
 

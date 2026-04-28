@@ -4,7 +4,7 @@
 
 기존 클러스터의 임의 서비스를 host 기반 Ingress + cluster-ca self-signed TLS 구조로 노출하는 표준 절차. Phase A 결과물(`serving.INGRESS-LB-IP.nip.io`, `hub.INGRESS-LB-IP.nip.io`)을 기반으로 동일 패턴 재현.
 
-> **선결 조건:** NGINX Ingress Controller, cert-manager, cluster-ca-issuer가 이미 운영 중이어야 한다. 미설치 상태라면 `docs/journal/4_27_Ingress_TLS_도입_및_host_기반_라우팅.md` §4-2 ~ §4-4 절차 선행.
+> **선결 조건:** NGINX Ingress Controller, cert-manager, cluster-ca-issuer가 이미 운영 중이어야 한다. 미설치 상태라면 `docs/journal/4_27_Ingress_TLS_도입_및_host_기반_라우팅.md` 4-2 ~ 4-4 절차 선행.
 
 ---
 
@@ -229,7 +229,7 @@ issuer=CN = cluster-ca
 subject=CN = ${HOST}
 ```
 
-> ⛔ `issuer=O = Acme Co, CN = Kubernetes Ingress Controller Fake Certificate`가 나오면 **실패**. Certificate에 DNS SAN 누락 또는 Ingress의 `tls.secretName`과 실제 Secret 불일치. §4-1로 돌아가서 dnsNames 확인.
+> ⛔ `issuer=O = Acme Co, CN = Kubernetes Ingress Controller Fake Certificate`가 나오면 **실패**. Certificate에 DNS SAN 누락 또는 Ingress의 `tls.secretName`과 실제 Secret 불일치. 4-1로 돌아가서 dnsNames 확인.
 
 ### 5-4. 인증서 SAN 검증
 
@@ -463,7 +463,7 @@ Basic Auth 적용 (관리자 전용).
 ☐ (해당 시) WebSocket / 파일 업로드 / API 호출 등 추가 검증 통과
 ```
 
-위 7개 항목 모두 통과해야 Phase 완료. 하나라도 실패 시 §6 트러블슈팅으로 복귀.
+위 7개 항목 모두 통과해야 Phase 완료. 하나라도 실패 시 6 트러블슈팅으로 복귀.
 
 ---
 
