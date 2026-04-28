@@ -422,7 +422,7 @@ sudo systemctl disable kubectl-jupyterhub.service
 │   ├── 📄 4_01_Grafana_대시보드_미표시_및_RBAC_권한_문제
 │   ├── 📄 4_09_Alertmanager_Silence_DaemonSet_알람_억제
 │   ├── 📄 4_16_incidents_이미지화_장애_3건   ⭐ containerd namespace 격리 · ConfigMap read-only 충돌 · nodeSelector 범위 불일치
-│   └── 📄 INC_2026-04-28_grafana_chart_upgrade   ⭐ helm --version 미지정 → chart 자동 업그레이드 · CrashLoop · NodePort 변경
+│   └── 📄 4_28_grafana_chart_upgrade   ⭐ helm --version 미지정 → chart 자동 업그레이드 · CrashLoop · NodePort 변경
 │
 └── 📁 images/
 ```
