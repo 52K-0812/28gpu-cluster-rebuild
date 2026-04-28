@@ -293,7 +293,7 @@ MLflow alias "champion" 조회
 |---|---|---|
 | `system-cluster-critical` | 2000000000 | cert-manager, argo-workflows controller/server, Prometheus, Alertmanager, Grafana, kube-state-metrics, Prometheus Operator, ingress-nginx, JupyterHub hub/proxy/user-scheduler, MLflow server/postgres |
 | `serving-critical` | 1000000 | yolov8-serving ✅ **(2026-04-28 적용 완료)** |
-| `training-normal` | 100 | Argo workflow steps **(Phase C 적용 예정)** |
+| `training-normal` | 100 | yolov8-dag-pipeline, yolov8-visdrone-train WorkflowTemplate ✅ **(2026-04-28 완료)** |
 | (default = 0) | 0 | JupyterHub singleuser, 기타 |
 
 **보류 항목:**
@@ -302,7 +302,48 @@ MLflow alias "champion" 조회
 
 ---
 
-## 13. 🔒 백업 / DR
+## 13. 📏 LimitRange (ai-team)
+
+2026-04-28 적용. ai-team 네임스페이스에서 생성되는 모든 컨테이너에 기본 request/limit을 자동 주입하고, 선언 범위를 강제한다.
+
+- **리소스명:** `ai-team-default-compute`
+- **네임스페이스:** `ai-team`
+- **적용 방식:** `kubectl apply` (Helm 비사용)
+
+| 항목 | CPU | Memory |
+|---|---|---|
+| defaultRequest | 500m | 1Gi |
+| default (limit) | 4 | 16Gi |
+| min | 100m | 256Mi |
+| max | 16 | 64Gi |
+| maxLimitRequestRatio | 8 | 16 |
+
+> **효과:** requests/limits 미선언 Pod가 ai-team에 생성되면 자동으로 위 기본값이 주입된다. min/max 범위를 벗어난 Pod는 admission에서 거부된다.
+
+---
+
+## 14. 📦 ResourceQuota (ai-team)
+
+2026-04-28 적용. ai-team 네임스페이스 전체의 GPU/CPU/Memory/Pod 수량 상한을 설정한다.
+
+- **리소스명:** `ai-team-compute-quota`
+- **네임스페이스:** `ai-team`
+- **적용 방식:** `kubectl apply` (Helm 비사용)
+
+| 항목 | Hard (상한) | 적용 직후 Used |
+|---|---|---|
+| requests.cpu | 80 | 1 |
+| requests.memory | 256Gi | 4Gi |
+| limits.cpu | 256 | 4 |
+| limits.memory | 768Gi | 16Gi |
+| requests.nvidia.com/gpu | 16 | 2 |
+| pods | 80 | 12 |
+
+> **효과:** GPU 16장 상한 초과 요청은 admission에서 `exceeded quota` 오류로 차단된다. LimitRange(Section 13)가 기본 request/limit을 먼저 주입하므로 requests/limits 미선언 Pod도 정상 생성된다.
+
+---
+
+## 15. 🔒 백업 / DR
 
 - **방식:** root crontab on master-01 (`sudo crontab -e`, K8s CronJob 아님 — 클러스터 장애 시 CronJob도 불가하므로)
 - **스케줄:** 매일 02:00
@@ -313,14 +354,15 @@ MLflow alias "champion" 조회
 
 ---
 
-## 14. ⚠️ 미해결 과제 / 한계
+## 16. ⚠️ 미해결 과제 / 한계
 
 | 항목 | 현황 | 비고 |
 |---|---|---|
 | HTTPS / Ingress | ✅ 적용 완료 | hub / serving Ingress + TLS (nip.io) 운영 중 |
 | JupyterHub 인증 | ✅ GitHub OAuth | GitHubOAuthenticator 전환 완료 (2026-04-27) |
-| PriorityClass 도입 | ✅ 완료 (2026-04-28) | Phase A/B/B-1/C(serving) 완료. training-normal(Argo steps) 미적용, LimitRange(D)/ResourceQuota(E) 예정 |
-| **ResourceQuota** | **미적용** | **Phase D/E 예정. 팀원 GPU 점유 제한 없음** |
+| PriorityClass 도입 | ✅ 완료 (2026-04-28) | Phase A~C 전 완료. serving-critical(yolov8-serving), training-normal(Argo WorkflowTemplate 2종) |
+| LimitRange (Phase D) | ✅ 완료 (2026-04-28) | ai-team-default-compute — 컨테이너 기본값 자동 주입 + min/max 강제 |
+| ResourceQuota (Phase E) | ✅ 완료 (2026-04-28) | ai-team-compute-quota — GPU 16장 상한 포함 CPU/Memory/Pod 상한 |
 | 관리자 서비스 인증 | NodePort 노출, 인증 없음 | Ingress Phase B에서 Basic Auth 적용 예정 (Grafana, MLflow, Argo, Filebrowser) |
 | YOLOv8 Serving 보호 | 인증 없음 | Basic Auth 또는 API Key 적용 예정 |
 | Portainer 외부 노출 | NodePort | Tailscale 경유 고정 유지 (Ingress 노출 계획 없음) |
@@ -344,3 +386,4 @@ MLflow alias "champion" 조회
 | 2026-04-17 | 서빙 이미지 DockerHub 전환 (`1jkim/yolov8-serving:v1`), 2080ti-gpu-04 hostname nodeSelector 고정 해제 |
 | 2026-04-27 | Ingress + TLS 완료 (NGINX Ingress, cert-manager, cluster-ca self-signed, MetalLB LB-INGRESS-IP), GitHub OAuth 완료 (DummyAuth 제거), 서비스 분류 체계 정비 |
 | 2026-04-28 | PriorityClass 4계층 도입 (Phase A/B/B-1 완료), yolov8-serving serving-critical 적용 완료 (Phase C), monitoring chart 버전 82.15.1 고정 운영 결정, Grafana PVC 복구, INC-2026-04-28 발생 및 복구, MLflow LoadBalancer IP 배정표 추가 |
+| 2026-04-28 | Phase C 완료 — Argo WorkflowTemplate 2종(yolov8-dag-pipeline, yolov8-visdrone-train) training-normal 적용 (spec.podPriorityClassName). Phase D 완료 — LimitRange ai-team-default-compute 적용. Phase E 완료 — ResourceQuota ai-team-compute-quota 적용 (GPU 16장 상한). Section 13/14 신규 추가. |

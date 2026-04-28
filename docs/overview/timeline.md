@@ -189,7 +189,7 @@
               └ DummyAuth PVC(claim-member-01~05) 및 Hub DB 레코드 정리 완료
 
 4월 28일  ──  PriorityClass 4계층 도입 — 자원 경합 대비 파드 보호 체계 확립 ⭐
-              (Phase A: 정의 → Phase B: 시스템 파드 → Phase B-1: MLflow 보강 → Phase C: 서빙)
+              (Phase A: 정의 → Phase B: 시스템 파드 → Phase B-1: MLflow 보강 → Phase C: 서빙/학습)
               └ serving-critical(1000000) / training-normal(100) PriorityClass 신규 정의
               └ cert-manager / argo-workflows / ingress-nginx → system-cluster-critical Helm upgrade
               └ jupyterhub hub/proxy/user-scheduler → extraPodSpec escape hatch로 적용 (schema 불일치 우회)
@@ -198,6 +198,22 @@
               └   · 이후 monitoring은 kubectl patch로 개별 적용 (chart 재렌더링 없이)
               └ mlflow-postgres / mlflow-server → kubectl patch (Helm 비관리 구조)
               └ yolov8-serving → serving-critical 적용 완료 (Phase C)
+              └ yolov8-dag-pipeline / yolov8-visdrone-train WorkflowTemplate → training-normal 적용 (Phase C)
+              └   · spec.priorityClassName 시도 → unknown field → spec.podPriorityClassName으로 교정
               └ 재발 방지: monitoring Helm upgrade 시 --version 82.15.1 고정 의무화
               └ 검증: 전 컴포넌트 PriorityClass 적용 확인 · champion_ready=true · JupyterHub HTTPS 정상
+
+4월 28일  ──  LimitRange Phase D + ResourceQuota Phase E — ai-team 자원 거버넌스 완성 ⭐
+              └ [Phase D] LimitRange ai-team-default-compute 적용
+              └   · defaultRequest: cpu=500m / memory=1Gi
+              └   · default(limit): cpu=4 / memory=16Gi
+              └   · min: cpu=100m / memory=256Mi · max: cpu=16 / memory=64Gi
+              └   · server dry-run 검증 → 실제 apply → smoke test (자동 주입 확인) 통과
+              └   · min/max 위반 dry-run 거부, 정상 명시값 dry-run 통과 검증 완료
+              └ [Phase E] ResourceQuota ai-team-compute-quota 적용
+              └   · requests.nvidia.com/gpu: 16 (GPU 상한), pods: 80, requests.cpu: 80, requests.memory: 256Gi
+              └   · limits.cpu: 256, limits.memory: 768Gi
+              └   · GPU 17장 초과 요청 → exceeded quota 차단 확인
+              └   · LimitRange 기본 주입(LimitRanger annotation) Phase E 이후에도 정상 동작 확인
+              └   · 기존 운영 Pod(hub/proxy/yolov8-serving/jupyter 등) 영향 없음
 ```

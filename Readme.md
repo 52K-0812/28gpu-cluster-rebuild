@@ -127,6 +127,8 @@
 | MLflow            | 실험 추적 · params 105개 + metrics 자동 기록 · Registry alias(champion) 기반 버전 관리               |
 | 모델 서빙         | FastAPI `/predict`(champion) · `/predict-demo`(COCO) · `https://serving.INGRESS-LB-IP.nip.io` · 77ms |
 | 워크로드 우선순위 | PriorityClass 4계층 도입 완료 — 시스템 파드 eviction 보호, 서빙/학습 계층화                          |
+| LimitRange        | `ai-team-default-compute` — 컨테이너 기본 request/limit 자동 주입, min/max 강제 (2026-04-28)         |
+| ResourceQuota     | `ai-team-compute-quota` — GPU 16장 상한, CPU/Memory/Pod 네임스페이스 상한 적용 (2026-04-28)          |
 | 구축 기간         | **약 7주** (3/12 ~ 4/28)                                                                             |
 
 ---
@@ -162,6 +164,9 @@ Phase 5  서비스 노출 및 운영 안정화 (4/27 ~ 4/28)
   └ JupyterHub WebSocket timeout annotation 적용 · Notebook 셀 실행 검증 완료 ⭐
   └ DummyAuthenticator 제거 → GitHub OAuth (GitHubOAuthenticator) 전환 완료 ⭐
   └ PriorityClass 4계층 도입 (Phase A/B/B-1) — 시스템 파드 eviction 보호 완료 ⭐
+  └ PriorityClass Phase C — yolov8-serving serving-critical, Argo WorkflowTemplate training-normal 적용 완료 ⭐
+  └ LimitRange Phase D — ai-team 컨테이너 기본 request/limit 자동 주입 (500m/1Gi req, 4/16Gi limit) ⭐
+  └ ResourceQuota Phase E — ai-team GPU 16장 상한 포함 네임스페이스 자원 상한 확립 ⭐
   └ monitoring Helm chart 버전 82.15.1 고정 운영 결정 (INC-2026-04-28)
   └ 상세 → docs/journal/5.서비스_노출_및_운영_안정화/
 ```
@@ -347,14 +352,14 @@ sudo systemctl disable kubectl-jupyterhub.service
 - [x] **Ingress + TLS Phase A** — NGINX Ingress + cert-manager, JupyterHub · YOLOv8 Serving HTTPS host 라우팅, WebSocket 안정화
 - [x] **JupyterHub GitHub OAuth** — DummyAuthenticator 제거, GitHubOAuthenticator 전환 완료
 - [x] **PriorityClass 4계층 도입 (Phase A/B/B-1)** — system-cluster-critical / serving-critical / training-normal / default 체계 구축. cert-manager · argo · monitoring · ingress-nginx · jupyterhub · mlflow 시스템 파드 보호 완료
+- [x] **PriorityClass Phase C** — yolov8-serving `serving-critical` 적용, yolov8-dag-pipeline · yolov8-visdrone-train WorkflowTemplate `training-normal` 적용 (spec.podPriorityClassName)
+- [x] **LimitRange (Phase D)** — ai-team 네임스페이스 컨테이너 기본 request/limit 자동 주입 (defaultRequest: cpu=500m/mem=1Gi, default: cpu=4/mem=16Gi, min/max 강제)
+- [x] **ResourceQuota (Phase E)** — ai-team 네임스페이스 GPU 16장 상한 포함 CPU/Memory/Pod 상한 확립
 
 ---
 
 ## 🏁 향후 계획
 
-- [ ] **PriorityClass Phase C** — yolov8-serving `serving-critical` 적용, Argo workflow steps `training-normal` 적용
-- [ ] **LimitRange (Phase D)** — ai-team 네임스페이스 컨테이너 default request/limit 자동 주입
-- [ ] **ResourceQuota (Phase E)** — 네임스페이스별 GPU 자원 상한 및 우선순위 정책 적용 (GPU 16장 상한 예정)
 - [ ] Ingress Phase B — Grafana · Argo · MLflow · Filebrowser HTTPS host 라우팅 + Basic Auth 보호 계층 동시 적용
 - [ ] YOLOv8 Serving 보호 정책 — Basic Auth 또는 API Key 적용 (현재 인증 없음)
 - [ ] Let's Encrypt DNS-01 — 본인 소유 도메인 확보 후 공인 인증서 전환
@@ -493,6 +498,7 @@ sudo systemctl disable kubectl-jupyterhub.service
 | [Ingress + TLS 도입 및 host 기반 라우팅 ⭐](docs/journal/5.서비스_노출_및_운영_안정화/4_27_Ingress_TLS_도입_및_host_기반_라우팅.md) | NGINX Ingress Controller · cert-manager · host 라우팅 · self-signed TLS · JupyterHub WebSocket 검증              |
 | [JupyterHub GitHub OAuth 전환 ⭐](docs/journal/5.서비스_노출_및_운영_안정화/4_27_JupyterHub_GitHub_OAuth_전환.md)                   | DummyAuthenticator 제거 · GitHubOAuthenticator 적용 · allowed_users 설정                                         |
 | [PriorityClass 도입 Phase A/B/B-1 ⭐](docs/journal/5.서비스_노출_및_운영_안정화/4_28_PriorityClass_ResourceQuota_Phase_A_B_B1.md)   | PriorityClass 4계층 정의 · 시스템 파드 system-cluster-critical 적용 · MLflow 보강 · JupyterHub extraPodSpec 방식 |
+| [PriorityClass Phase C + LimitRange Phase D + ResourceQuota Phase E ⭐](docs/journal/5.서비스_노출_및_운영_안정화/4_28_PriorityClass_ResourceQuota_Phase_C_D_E.md) | serving-critical(yolov8-serving) · training-normal(Argo WorkflowTemplate) · LimitRange · ResourceQuota(GPU 16장 상한) |
 | [Ingress + TLS Runbook](docs/runbooks/runbook_ingress_tls.md)                                                                       | 신규 서비스를 host 기반 Ingress + cluster-ca TLS로 노출하는 표준 절차                                            |
 | [Let's Encrypt DNS-01 Runbook](docs/runbooks/runbook_letsencrypt_dns01.md)                                                          | 본인 도메인 + Cloudflare DNS API 기반 공인 인증서 전환 절차                                                      |
 
