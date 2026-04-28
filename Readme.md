@@ -16,11 +16,11 @@
 
 ## 📌 프로젝트 개요
 
-| 항목     | 내용                                                                    |
-| -------- | ----------------------------------------------------------------------- |
-| **기간** | 2026년 3월 12일 ~ 진행중                                                |
-| **역할** | 단독 수행 (시스템 복구 · 인프라 설계 · ML 파이프라인 구축 전 과정)      |
-| **환경** | 학교 서버실 온프레미스 GPU 클러스터                                     |
+| 항목     | 내용                                                                                       |
+| -------- | ------------------------------------------------------------------------------------------ |
+| **기간** | 2026년 3월 12일 ~ 진행중                                                                   |
+| **역할** | 단독 수행 (시스템 복구 · 인프라 설계 · ML 파이프라인 구축 전 과정)                         |
+| **환경** | 학교 서버실 온프레미스 GPU 클러스터                                                        |
 | **목표** | 방치된 GPU 클러스터를 AI 학습 파이프라인과 서비스 접속 환경이 동작하는 MLOps 인프라로 전환 |
 
 ---
@@ -88,15 +88,15 @@
 
 ## 🏗️ 클러스터 구성
 
-| 노드          | 역할                                      | GPU        | IP              |
-| ------------- | ----------------------------------------- | ---------- | --------------- |
-| master-01     | Control Plane                             | —          | `MASTER-IP`     |
-| master-02     | Worker (시스템 파드 + Ingress/cert-manager 전담) | —     | `WORKER-IP-02`  |
-| v100-gpu-01   | Worker (학습 전용)                        | V100 × 4   | `WORKER-IP-03`  |
-| 2080ti-gpu-02 | Worker                                    | 2080Ti × 8 | `WORKER-IP-04`  |
-| 2080ti-gpu-03 | Worker                                    | 2080Ti × 7 | `WORKER-IP-05`  |
-| 2080ti-gpu-04 | Worker                                    | 2080Ti × 8 | `WORKER-IP-06`  |
-| NAS (nas-01)  | 스토리지                                  | —          | `NAS-IP` (1G) / `10.10.10.157` (10G) |
+| 노드          | 역할                                             | GPU        | IP                                   |
+| ------------- | ------------------------------------------------ | ---------- | ------------------------------------ |
+| master-01     | Control Plane                                    | —          | `MASTER-IP`                          |
+| master-02     | Worker (시스템 파드 + Ingress/cert-manager 전담) | —          | `WORKER-IP-02`                       |
+| v100-gpu-01   | Worker (학습 전용)                               | V100 × 4   | `WORKER-IP-03`                       |
+| 2080ti-gpu-02 | Worker                                           | 2080Ti × 8 | `WORKER-IP-04`                       |
+| 2080ti-gpu-03 | Worker                                           | 2080Ti × 7 | `WORKER-IP-05`                       |
+| 2080ti-gpu-04 | Worker                                           | 2080Ti × 8 | `WORKER-IP-06`                       |
+| NAS (nas-01)  | 스토리지                                         | —          | `NAS-IP` (1G) / `10.10.10.157` (10G) |
 
 - **총 GPU:** V100 4장 + 2080Ti 23장 = **27장**
 - **K8s 버전:** v1.29.15
@@ -108,26 +108,26 @@
 
 ## ✅ 최종 결과
 
-| 항목            | 결과                                                                                                    |
-| --------------- | ------------------------------------------------------------------------------------------------------- |
-| 총 GPU          | V100 4장 + 2080Ti 23장 = **27장 통합**                                                                  |
-| 스토리지        | **27.3TB** NFS 마운트 완료                                                                              |
-| 내부 네트워크   | **전 노드 ~9Gbps** (1G → 10G, 약 10배)                                                                  |
-| 모니터링        | Grafana GPU 실시간 대시보드 (온도/전력/메모리)                                                          |
-| Ingress Gateway | NGINX Ingress Controller + cert-manager 도입, 단일 IP `INGRESS-LB-IP`에서 host 기반 라우팅 구성         |
-| HTTPS 접속      | `https://hub.INGRESS-LB-IP.nip.io` / `https://serving.INGRESS-LB-IP.nip.io`                            |
-| TLS             | cluster-ca self-signed 인증서, DNS SAN 포함, cert-manager 관리                                          |
-| 인증            | GitHub OAuth 적용 완료 (DummyAuthenticator 제거 — 2026-04-27)                                           |
-| 관리자 접속     | Grafana `:30300` / Prometheus `:30310` / Portainer `:30320` (Phase B Ingress 통합 예정)                 |
-| 팀 환경         | JupyterHub (GitHub 계정 기반 인증, GPU 자동 배정, NFS 홈 디렉토리, Notebook 셀 실행 검증 완료)          |
-| GPU 검증        | TensorFlow / PyTorch CUDA 인식 · MNIST 학습 동작 검증                                                   |
-| ML 학습         | YOLOv8 COCO mAP@0.5 46.8% / VisDrone mAP@0.5 33.4% (V100 4장 DDP)                                      |
-| 알람            | GPU 온도/메모리/노드 다운 3종 → Gmail 자동 통보                                                         |
-| 워크플로우      | Argo Workflows — 팀원 웹 UI로 학습 Job 제출 가능                                                        |
-| MLflow          | 실험 추적 · params 105개 + metrics 자동 기록 · Registry alias(champion) 기반 버전 관리                  |
-| 모델 서빙       | FastAPI `/predict`(champion) · `/predict-demo`(COCO) · `https://serving.INGRESS-LB-IP.nip.io` · 77ms   |
-| 워크로드 우선순위 | PriorityClass 4계층 도입 완료 — 시스템 파드 eviction 보호, 서빙/학습 계층화 |
-| 구축 기간       | **약 7주** (3/12 ~ 4/28)                                                                                |
+| 항목              | 결과                                                                                                 |
+| ----------------- | ---------------------------------------------------------------------------------------------------- |
+| 총 GPU            | V100 4장 + 2080Ti 23장 = **27장 통합**                                                               |
+| 스토리지          | **27.3TB** NFS 마운트 완료                                                                           |
+| 내부 네트워크     | **전 노드 ~9Gbps** (1G → 10G, 약 10배)                                                               |
+| 모니터링          | Grafana GPU 실시간 대시보드 (온도/전력/메모리)                                                       |
+| Ingress Gateway   | NGINX Ingress Controller + cert-manager 도입, 단일 IP `INGRESS-LB-IP`에서 host 기반 라우팅 구성      |
+| HTTPS 접속        | `https://hub.INGRESS-LB-IP.nip.io` / `https://serving.INGRESS-LB-IP.nip.io`                          |
+| TLS               | cluster-ca self-signed 인증서, DNS SAN 포함, cert-manager 관리                                       |
+| 인증              | GitHub OAuth 적용 완료 (DummyAuthenticator 제거 — 2026-04-27)                                        |
+| 관리자 접속       | Grafana `:30300` / Prometheus `:30310` / Portainer `:30320` (Phase B Ingress 통합 예정)              |
+| 팀 환경           | JupyterHub (GitHub 계정 기반 인증, GPU 자동 배정, NFS 홈 디렉토리, Notebook 셀 실행 검증 완료)       |
+| GPU 검증          | TensorFlow / PyTorch CUDA 인식 · MNIST 학습 동작 검증                                                |
+| ML 학습           | YOLOv8 COCO mAP@0.5 46.8% / VisDrone mAP@0.5 33.4% (V100 4장 DDP)                                    |
+| 알람              | GPU 온도/메모리/노드 다운 3종 → Gmail 자동 통보                                                      |
+| 워크플로우        | Argo Workflows — 팀원 웹 UI로 학습 Job 제출 가능                                                     |
+| MLflow            | 실험 추적 · params 105개 + metrics 자동 기록 · Registry alias(champion) 기반 버전 관리               |
+| 모델 서빙         | FastAPI `/predict`(champion) · `/predict-demo`(COCO) · `https://serving.INGRESS-LB-IP.nip.io` · 77ms |
+| 워크로드 우선순위 | PriorityClass 4계층 도입 완료 — 시스템 파드 eviction 보호, 서빙/학습 계층화                          |
+| 구축 기간         | **약 7주** (3/12 ~ 4/28)                                                                             |
 
 ---
 
@@ -488,26 +488,26 @@ sudo systemctl disable kubectl-jupyterhub.service
 
 ### 5. 서비스 노출 및 운영 안정화
 
-| 문서                                                                                                                  | 내용                                                                                                |
-| ------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------- |
-| [Ingress + TLS 도입 및 host 기반 라우팅 ⭐](docs/journal/5.서비스_노출_및_운영_안정화/4_27_Ingress_TLS_도입_및_host_기반_라우팅.md)             | NGINX Ingress Controller · cert-manager · host 라우팅 · self-signed TLS · JupyterHub WebSocket 검증    |
-| [JupyterHub GitHub OAuth 전환 ⭐](docs/journal/5.서비스_노출_및_운영_안정화/4_27_JupyterHub_GitHub_OAuth_전환.md)                   | DummyAuthenticator 제거 · GitHubOAuthenticator 적용 · allowed_users 설정                                |
-| [PriorityClass 도입 Phase A/B/B-1 ⭐](docs/journal/5.서비스_노출_및_운영_안정화/4_28_PriorityClass_ResourceQuota_Phase_A_B_B1.md) | PriorityClass 4계층 정의 · 시스템 파드 system-cluster-critical 적용 · MLflow 보강 · JupyterHub extraPodSpec 방식 |
-| [Ingress + TLS Runbook](docs/runbooks/runbook_ingress_tls.md)                                                       | 신규 서비스를 host 기반 Ingress + cluster-ca TLS로 노출하는 표준 절차                                              |
-| [Let's Encrypt DNS-01 Runbook](docs/runbooks/runbook_letsencrypt_dns01.md)                                          | 본인 도메인 + Cloudflare DNS API 기반 공인 인증서 전환 절차                                                       |
+| 문서                                                                                                                                | 내용                                                                                                             |
+| ----------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------- |
+| [Ingress + TLS 도입 및 host 기반 라우팅 ⭐](docs/journal/5.서비스_노출_및_운영_안정화/4_27_Ingress_TLS_도입_및_host_기반_라우팅.md) | NGINX Ingress Controller · cert-manager · host 라우팅 · self-signed TLS · JupyterHub WebSocket 검증              |
+| [JupyterHub GitHub OAuth 전환 ⭐](docs/journal/5.서비스_노출_및_운영_안정화/4_27_JupyterHub_GitHub_OAuth_전환.md)                   | DummyAuthenticator 제거 · GitHubOAuthenticator 적용 · allowed_users 설정                                         |
+| [PriorityClass 도입 Phase A/B/B-1 ⭐](docs/journal/5.서비스_노출_및_운영_안정화/4_28_PriorityClass_ResourceQuota_Phase_A_B_B1.md)   | PriorityClass 4계층 정의 · 시스템 파드 system-cluster-critical 적용 · MLflow 보강 · JupyterHub extraPodSpec 방식 |
+| [Ingress + TLS Runbook](docs/runbooks/runbook_ingress_tls.md)                                                                       | 신규 서비스를 host 기반 Ingress + cluster-ca TLS로 노출하는 표준 절차                                            |
+| [Let's Encrypt DNS-01 Runbook](docs/runbooks/runbook_letsencrypt_dns01.md)                                                          | 본인 도메인 + Cloudflare DNS API 기반 공인 인증서 전환 절차                                                      |
 
 ### 6. 장애 기록 (incidents)
 
-| 문서                                                                                                                  | 내용                                                                            |
-| --------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------- |
-| [10G NIC 이전 ⭐](docs/incidents/3_23_10G_NIC_이전.md)                                                                | 병목 발견 → 하드웨어 재배치 → 10G 개통                                          |
-| [2080Ti GPU 미인식 ⭐](docs/incidents/3_23_2080Ti_GPU_미인식.md)                                                      | 8장 중 1장 미인식 → 27장 확정 판단                                              |
-| [NAS NIC 접촉불량 ⭐](docs/incidents/3_27_NAS_NIC_접촉불량.md)                                                        | rev ff 진단 → PCIe 재삽입 → 9.41Gbps 복구                                       |
-| [Grafana DCGM No data](docs/incidents/3_27_Grafana_DCGM_No_data.md)                                                   | ServiceMonitor 라벨 불일치 → json replace 패치                                  |
-| [Portainer Tailscale 접속불가](docs/incidents/3_27_Portainer_Tailscale_접속불가.md)                                   | port-forward 좀비 상태 → 서비스 재시작                                          |
-| [네트워크 장애 및 클러스터 설계 개선 ⭐](docs/incidents/3_31_네트워크_장애_및_클러스터_설계_개선.md)                  | MetalLB ARP 충돌 · Calico 연쇄 장애 · IP Pool 재설계                            |
-| [JupyterHub 다중 접속 장애 및 서비스 재설계 ⭐](docs/incidents/4_01_JupyterHub_다중_접속_장애_및_서비스_설계_개선.md) | port-forward 제거 · MetalLB IP 재설계 · 공용/관리자 접속 분리                   |
-| [Grafana 대시보드 미표시 및 RBAC 권한 문제](docs/incidents/4_01_Grafana_대시보드_미표시_및_RBAC_권한_문제.md)         | 물리 네트워크 단절 + RBAC 권한 부족 동시 진단                                   |
-| [Alertmanager Silence — DaemonSet 오탐 억제](docs/incidents/4_09_Alertmanager_Silence_DaemonSet_알람_억제.md)         | continuous-image-puller 오탐 분석 · PrometheusRule 대신 Silence 적용            |
-| [이미지화 장애 3건 ⭐](docs/incidents/4_16_incidents_이미지화_장애_3건.md)                                            | containerd namespace 격리 · ConfigMap read-only 충돌 · nodeSelector 범위 불일치 |
-| [Grafana chart 의도치 않은 업그레이드 ⭐](docs/incidents/INC_2026-04-28_grafana_chart_upgrade.md)                      | helm upgrade 버전 미고정 → chart 자동 업그레이드 → CrashLoopBackOff · NodePort 변경 · PVC 미마운트 · 동일 세션 내 복구 |
+| 문서                                                                                                                  | 내용                                                                                                                   |
+| --------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------- |
+| [10G NIC 이전 ⭐](docs/incidents/3_23_10G_NIC_이전.md)                                                                | 병목 발견 → 하드웨어 재배치 → 10G 개통                                                                                 |
+| [2080Ti GPU 미인식 ⭐](docs/incidents/3_23_2080Ti_GPU_미인식.md)                                                      | 8장 중 1장 미인식 → 27장 확정 판단                                                                                     |
+| [NAS NIC 접촉불량 ⭐](docs/incidents/3_27_NAS_NIC_접촉불량.md)                                                        | rev ff 진단 → PCIe 재삽입 → 9.41Gbps 복구                                                                              |
+| [Grafana DCGM No data](docs/incidents/3_27_Grafana_DCGM_No_data.md)                                                   | ServiceMonitor 라벨 불일치 → json replace 패치                                                                         |
+| [Portainer Tailscale 접속불가](docs/incidents/3_27_Portainer_Tailscale_접속불가.md)                                   | port-forward 좀비 상태 → 서비스 재시작                                                                                 |
+| [네트워크 장애 및 클러스터 설계 개선 ⭐](docs/incidents/3_31_네트워크_장애_및_클러스터_설계_개선.md)                  | MetalLB ARP 충돌 · Calico 연쇄 장애 · IP Pool 재설계                                                                   |
+| [JupyterHub 다중 접속 장애 및 서비스 재설계 ⭐](docs/incidents/4_01_JupyterHub_다중_접속_장애_및_서비스_설계_개선.md) | port-forward 제거 · MetalLB IP 재설계 · 공용/관리자 접속 분리                                                          |
+| [Grafana 대시보드 미표시 및 RBAC 권한 문제](docs/incidents/4_01_Grafana_대시보드_미표시_및_RBAC_권한_문제.md)         | 물리 네트워크 단절 + RBAC 권한 부족 동시 진단                                                                          |
+| [Alertmanager Silence — DaemonSet 오탐 억제](docs/incidents/4_09_Alertmanager_Silence_DaemonSet_알람_억제.md)         | continuous-image-puller 오탐 분석 · PrometheusRule 대신 Silence 적용                                                   |
+| [이미지화 장애 3건 ⭐](docs/incidents/4_16_incidents_이미지화_장애_3건.md)                                            | containerd namespace 격리 · ConfigMap read-only 충돌 · nodeSelector 범위 불일치                                        |
+| [Grafana chart 의도치 않은 업그레이드 ⭐](docs/incidents/4_28_grafana_chart_upgrade.md)                               | helm upgrade 버전 미고정 → chart 자동 업그레이드 → CrashLoopBackOff · NodePort 변경 · PVC 미마운트 · 동일 세션 내 복구 |
