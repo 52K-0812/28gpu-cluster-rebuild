@@ -11,16 +11,16 @@
 
 ## 1. 📋 현재 배포 대상
 
-| 항목        | 내용                                                                       |
-| --------- | ------------------------------------------------------------------------ |
-| 엔드포인트     | `POST /predict-demo` (COCO) · `POST /predict` (champion) · `GET /health` |
-| 배포 이미지    | `1jkim/yolov8-serving:v1` (DockerHub public)                             |
-| 이미지 저장 위치 | DockerHub — 모든 노드에서 자동 pull 가능                                           |
-| 배포 노드     | 2080Ti 풀 자동 스케줄 (`gpu-type: 2080ti`, hostname 고정 없음)                     |
-| GPU       | 2080Ti × 1                                                               |
-| 추론 속도     | 77ms                                                                     |
-| 접속 (기본)   | `https://serving.<LB-INGRESS-IP>.nip.io` (Ingress + TLS, 2026-04-27 전환) |
-| 접속 (fallback) | `http://<MASTER-IP>:30600` (NodePort, Ingress 장애 시)                   |
+| 항목             | 내용                                                                      |
+| ---------------- | ------------------------------------------------------------------------- |
+| 엔드포인트       | `POST /predict-demo` (COCO) · `POST /predict` (champion) · `GET /health`  |
+| 배포 이미지      | `1jkim/yolov8-serving:v1` (DockerHub public)                              |
+| 이미지 저장 위치 | DockerHub — 모든 노드에서 자동 pull 가능                                  |
+| 배포 노드        | 2080Ti 풀 자동 스케줄 (`gpu-type: 2080ti`, hostname 고정 없음)            |
+| GPU              | 2080Ti × 1                                                                |
+| 추론 속도        | 77ms                                                                      |
+| 접속 (기본)      | `https://serving.<LB-INGRESS-IP>.nip.io` (Ingress + TLS, 2026-04-27 전환) |
+| 접속 (fallback)  | `http://<MASTER-IP>:30600` (NodePort, Ingress 장애 시)                    |
 
 **서빙 구조:**
 
@@ -93,7 +93,7 @@ kubectl rollout status deployment/yolov8-serving -n ai-team
 ```
 
 > **buildkitd 주의:** 현재 nohup 백그라운드 실행 중. master-01 재부팅 시 수동 재실행 필요.
-> 
+>
 > ```bash
 > sudo nohup /usr/local/bin/buildkitd >/tmp/buildkitd.log 2>&1 &
 > ```
@@ -231,12 +231,12 @@ kubectl describe pod -n ai-team -l app=yolov8-serving | tail -30
 kubectl logs -n ai-team -l app=yolov8-serving --tail=50
 ```
 
-|증상|원인|조치|
-|---|---|---|
-|`ImagePullBackOff`|DockerHub 접근 불가 또는 이미지명 오타|`kubectl describe pod` 에러 확인, 네트워크 상태 점검|
-|`CrashLoopBackOff`|코드 오류 또는 볼륨 마운트 문제|`kubectl logs` 에러 확인|
-|`Pending`|2080Ti GPU 자원 없음|`kubectl get pods -n ai-team -o wide`로 점유 Pod 확인|
-|`OOMKilled`|GPU 메모리 부족|다른 2080Ti Pod 점유 확인 후 정리|
+| 증상               | 원인                                   | 조치                                                  |
+| ------------------ | -------------------------------------- | ----------------------------------------------------- |
+| `ImagePullBackOff` | DockerHub 접근 불가 또는 이미지명 오타 | `kubectl describe pod` 에러 확인, 네트워크 상태 점검  |
+| `CrashLoopBackOff` | 코드 오류 또는 볼륨 마운트 문제        | `kubectl logs` 에러 확인                              |
+| `Pending`          | 2080Ti GPU 자원 없음                   | `kubectl get pods -n ai-team -o wide`로 점유 Pod 확인 |
+| `OOMKilled`        | GPU 메모리 부족                        | 다른 2080Ti Pod 점유 확인 후 정리                     |
 
 ### 웹캠 접근 불가 (HTTP 환경)
 
@@ -287,12 +287,12 @@ kubectl rollout restart deployment/yolov8-serving -n ai-team
 ```yaml
 # 이전 방식 — 런타임 pip install (현재 제거됨)
 image: ultralytics/ultralytics:8.1.0
-command: ["/bin/sh", "-c"]
+command: ['/bin/sh', '-c']
 args:
-- pip install fastapi uvicorn python-multipart mlflow psycopg2-binary -q && python /app/main.py
+  - pip install fastapi uvicorn python-multipart mlflow psycopg2-binary -q && python /app/main.py
 volumeMounts:
-- name: app-code       # ConfigMap read-only 마운트 → 모델 다운로드 실패 유발
-  mountPath: /app
+  - name: app-code # ConfigMap read-only 마운트 → 모델 다운로드 실패 유발
+    mountPath: /app
 ```
 
 **문제점:**
