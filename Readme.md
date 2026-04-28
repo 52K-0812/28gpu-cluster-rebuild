@@ -372,7 +372,8 @@ sudo systemctl disable kubectl-jupyterhub.service
 📁 docs/
 ├── 📁 overview/
 │   ├── 📄 cluster-diagram.md            # 클러스터 구성도
-│   └── 📄 current-architecture.md       # 현재 유효한 클러스터 구조 한 장 요약
+│   ├── 📄 current-architecture.md       # 현재 유효한 클러스터 구조 한 장 요약
+│   └── 📄 timeline.md                   # 작업 타임라인 상세 (날짜별 풀버전)
 │
 ├── 📁 journal/                          # 날짜순 작업 기록 (증거 문서)
 │   ├── 📁 1.cheetah-복구/               # Phase 1 — 레거시 시스템 복구 시도
@@ -392,7 +393,7 @@ sudo systemctl disable kubectl-jupyterhub.service
 │   │   └── 📄 4_02_GPU_노드_네트워크_최적화_10GbE_라우팅_설정
 │   │
 │   ├── 📁 4.ML_파이프라인_구축/          # Phase 4 — YOLOv8 · Argo · MLflow · CI/CD
-│   │   ├── 📄 4_02_YOLOv8_COCO_학습
+│   │   ├── 📄 4_02_YOLOv8_COCO_학습_및_웹캠_추론_테스트
 │   │   ├── 📄 4_03_YOLOv8_VisDrone_멀티GPU_학습_Job
 │   │   ├── 📄 4_04_YOLOv8_VisDrone_학습_결과_보고서
 │   │   ├── 📄 4_06_Argo_Workflows_설치_및_WorkflowTemplate_구성
@@ -400,14 +401,15 @@ sudo systemctl disable kubectl-jupyterhub.service
 │   │   ├── 📄 4_09_Argo_Workflows_Tailscale_접속_및_포트_변경
 │   │   ├── 📄 4_13_MLflow_설치_및_Argo_DAG_연동
 │   │   ├── 📄 4_13_GitHub_Actions_CICD
-│   │   ├── 📄 4_13_FastAPI_YOLOv8_모델_서빙
 │   │   ├── 📄 4_15_MLflow_alias_FastAPI_엔드포인트_분리
 │   │   ├── 📄 4_16_YOLOv8_서빙_이미지화
 │   │   └── 📄 4_17_YOLOv8_서빙_이미지_DockerHub_등록
 │   │
-│   └── 📁 5.서비스_노출_및_운영_안정화/  # Phase 5 — Ingress · TLS · GitHub OAuth
+│   └── 📁 5.서비스_노출_및_운영_안정화/  # Phase 5 — Ingress · TLS · OAuth · 자원 거버넌스
 │       ├── 📄 4_27_Ingress_TLS_도입_및_host_기반_라우팅
-│       └── 📄 4_27_JupyterHub_GitHub_OAuth_전환
+│       ├── 📄 4_27_JupyterHub_GitHub_OAuth_전환
+│       ├── 📄 4_28_PriorityClass_ResourceQuota_Phase_A_B_B1  ⭐ PriorityClass 4계층 · 시스템 파드 보호
+│       └── 📄 4_28_PriorityClass_ResourceQuota_Phase_C_D_E  ⭐ 워크로드 priority · LimitRange · ResourceQuota
 │
 ├── 📁 runbooks/                         # 운영 절차 · 복구 매뉴얼
 │   ├── 📄 runbook_etcd_restore.md       # etcd 백업 · 스냅샷 복원 DR 검증
@@ -417,6 +419,8 @@ sudo systemctl disable kubectl-jupyterhub.service
 │   └── 📄 runbook_letsencrypt_dns01.md  # DNS-01 기반 공인 인증서 전환 절차
 │
 ├── 📁 incidents/                        # 장애 기록 · 트러블슈팅
+│   ├── 📄 3_17_HPE_ACPI_장애
+│   ├── 📄 3_19_GPU_드라이버_업데이트    ⭐ 재구축 결정 근거 (journal과 교차 수록)
 │   ├── 📄 3_23_10G_NIC_이전             ⭐ 하드웨어 재배치로 10G 개통
 │   ├── 📄 3_23_2080Ti_GPU_미인식        ⭐ 27장 확정 판단
 │   ├── 📄 3_27_NAS_NIC_접촉불량         ⭐ rev ff 진단 · PCIe 재삽입
@@ -425,6 +429,7 @@ sudo systemctl disable kubectl-jupyterhub.service
 │   ├── 📄 3_31_네트워크_장애_및_클러스터_설계_개선  ⭐ MetalLB ARP 충돌 · Calico 연쇄 장애
 │   ├── 📄 4_01_JupyterHub_다중_접속_장애_및_서비스_설계_개선  ⭐ port-forward 제거 · 재설계
 │   ├── 📄 4_01_Grafana_대시보드_미표시_및_RBAC_권한_문제
+│   ├── 📄 4_02_GPU_노드_네트워크_최적화_10GbE_라우팅_설정
 │   ├── 📄 4_09_Alertmanager_Silence_DaemonSet_알람_억제
 │   ├── 📄 4_16_incidents_이미지화_장애_3건   ⭐ containerd namespace 격리 · ConfigMap read-only 충돌 · nodeSelector 범위 불일치
 │   └── 📄 4_28_grafana_chart_upgrade   ⭐ helm --version 미지정 → chart 자동 업그레이드 · CrashLoop · NodePort 변경
