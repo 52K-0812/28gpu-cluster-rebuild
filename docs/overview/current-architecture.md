@@ -210,6 +210,25 @@
 | `POST /reload-champion` | — | Pod 재시작 없이 최신 champion 반영 |
 | `GET /health` | — | 서버 상태 + champion 버전 확인 |
 
+### 웹 UI
+
+- 루트(`/`) 페이지에 웹 UI 제공
+- 파일 업로드 / 웹캠 캡처 모드 지원
+- `/predict-demo` / `/predict` 엔드포인트 선택 가능
+- 헤더 상태 배지로 `COCO · 80cls` / `champion · v{버전}` 표시
+- 추론 결과 이미지, 탐지 카드, confidence bar 표시
+
+### health 응답 예시
+
+```json
+{
+  "status": "ok",
+  "demo_model": "yolov8n-coco (80 classes)",
+  "champion_ready": true,
+  "champion_version": "7"
+}
+```
+
 ### champion 모델 로드 방식
 
 ```
