@@ -1,5 +1,9 @@
 # Runbook — Let's Encrypt 공인 인증서 적용 (DNS-01 Challenge)
 
+> ⚠️ **상태: 계획 단계 (미완료)**
+> 현재 클러스터는 cluster-ca self-signed 인증서로 운영 중 (2026-04-27 Ingress+TLS 전환 완료).
+> 본인 소유 도메인 확보 후 이 절차를 적용한다.
+
 ## 🎯 1. 목적
 
 self-signed 인증서를 Let's Encrypt 공인 인증서로 전환하기 위한 절차서. Phase A에서 HTTP-01 challenge가 실패한 원인을 회피하기 위해 DNS-01 challenge 사용.

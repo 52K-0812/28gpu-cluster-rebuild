@@ -165,4 +165,39 @@
               └ hostname nodeSelector 제거 → gpu-type: 2080ti 단독 유지
               └ 2080Ti 풀(02~04) 전체에서 자동 스케줄 가능한 구조로 전환
               └ 검증: Pod Running · 1jkim/yolov8-serving:v1 · champion_ready=true · v5 정상
+
+━━━ Phase 5 : 서비스 노출 및 운영 안정화 (4/27 ~ ) ━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+4월 27일  ──  Ingress + TLS 도입 — 외부 HTTPS 진입점 일원화 ⭐
+              └ NGINX Ingress Controller 설치 (master-02 고정 배치)
+              └ cert-manager 설치 + cluster-ca self-signed ClusterIssuer 구성
+              └ MetalLB Pool에 Ingress IP 추가 (신규 LB IP 할당)
+              └ host 기반 라우팅 전환 (catch-all → nip.io wildcard DNS)
+              └ serving.{IP}.nip.io / hub.{IP}.nip.io Certificate (DNS SAN 포함) 발급
+              └ JupyterHub Ingress (WebSocket annotation 포함) · YOLOv8 Serving Ingress 생성
+              └ Let's Encrypt HTTP-01 캠퍼스 환경 제약으로 중단 → self-signed 유지 결정
+              └ HTTPS 적용으로 웹캠 getUserMedia() 제약 해소
+              └ 검증: hub · serving 양쪽 HTTPS 302 + JupyterHub Notebook 셀 실행까지 통과
+
+4월 27일  ──  JupyterHub GitHub OAuth 전환 — DummyAuthenticator 완전 제거 ⭐
+              └ HTTPS 선결 조건 충족 확인 후 즉시 OAuth 전환 진행
+              └ GitHub OAuth App 생성 (callback: https://hub.{IP}.nip.io/hub/oauth_callback)
+              └ K8s Secret `jupyterhub-github-oauth` 등록 (Client ID/Secret 환경변수 주입)
+              └ full values 방식으로 DummyAuthenticator 완전 제거 + GitHubOAuthenticator 적용
+              └ 허용 사용자: 52K-0812, Yeeeho, Da-Woon-J / 관리자: 52K-0812
+              └ 팀원 로그인 검증 · 허용 외 계정 403 차단 확인
+              └ DummyAuth PVC(claim-member-01~05) 및 Hub DB 레코드 정리 완료
+
+4월 28일  ──  PriorityClass 4계층 도입 — 자원 경합 대비 파드 보호 체계 확립 ⭐
+              (Phase A: 정의 → Phase B: 시스템 파드 → Phase B-1: MLflow 보강 → Phase C: 서빙)
+              └ serving-critical(1000000) / training-normal(100) PriorityClass 신규 정의
+              └ cert-manager / argo-workflows / ingress-nginx → system-cluster-critical Helm upgrade
+              └ jupyterhub hub/proxy/user-scheduler → extraPodSpec escape hatch로 적용 (schema 불일치 우회)
+              └ monitoring → Helm upgrade 중 chart 82.15.1 → 84.1.2 의도치 않은 업그레이드 발생 (INC-2026-04-28)
+              └   · Grafana CrashLoopBackOff, NodePort 변경, PVC 미마운트 → rollback + kubectl patch로 복구
+              └   · 이후 monitoring은 kubectl patch로 개별 적용 (chart 재렌더링 없이)
+              └ mlflow-postgres / mlflow-server → kubectl patch (Helm 비관리 구조)
+              └ yolov8-serving → serving-critical 적용 완료 (Phase C)
+              └ 재발 방지: monitoring Helm upgrade 시 --version 82.15.1 고정 의무화
+              └ 검증: 전 컴포넌트 PriorityClass 적용 확인 · champion_ready=true · JupyterHub HTTPS 정상
 ```

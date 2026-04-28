@@ -1,9 +1,10 @@
 # Runbook — FastAPI YOLOv8 모델 서빙
 
-> **목적:** YOLOv8 추론 서버의 배포 · 이미지 관리 · 검증 · 장애 대응 절차 
-> **최초 구축:** 2026-04-13 
-> **이미지화 전환:** 2026-04-16 
-> **관리 네임스페이스:** `ai-team` 
+> **목적:** YOLOv8 추론 서버의 배포 · 이미지 관리 · 검증 · 장애 대응 절차
+> **최초 구축:** 2026-04-13
+> **이미지화 전환:** 2026-04-16
+> **Ingress + TLS 전환:** 2026-04-27
+> **관리 네임스페이스:** `ai-team`
 > **담당:** 관리자
 
 ---
@@ -18,7 +19,8 @@
 | 배포 노드     | 2080Ti 풀 자동 스케줄 (`gpu-type: 2080ti`, hostname 고정 없음)                     |
 | GPU       | 2080Ti × 1                                                               |
 | 추론 속도     | 77ms                                                                     |
-| 접속        | `http://TAILSCALE-IP:30600` (Tailscale)                                  |
+| 접속 (기본)   | `https://serving.<LB-INGRESS-IP>.nip.io` (Ingress + TLS, 2026-04-27 전환) |
+| 접속 (fallback) | `http://<MASTER-IP>:30600` (NodePort, Ingress 장애 시)                   |
 
 **서빙 구조:**
 
@@ -184,18 +186,21 @@ kubectl logs -n ai-team -l app=yolov8-serving --tail=10
 # 기대값: INFO: Uvicorn running on http://0.0.0.0:8080
 
 # 3. health 확인
-curl http://TAILSCALE-IP:30600/health
+curl https://serving.<LB-INGRESS-IP>.nip.io/health
+# fallback: curl http://<MASTER-IP>:30600/health
 # 기대값: {"status":"ok","demo_model":"yolov8n-coco (80 classes)","champion_ready":true,"champion_version":"5"}
 
 # 4. /predict-demo 추론 테스트
-curl -X POST http://TAILSCALE-IP:30600/predict-demo \
+curl -X POST https://serving.<LB-INGRESS-IP>.nip.io/predict-demo \
   -F "file=@test_image.jpg" | python3 -m json.tool
+# fallback: curl -X POST http://<MASTER-IP>:30600/predict-demo -F "file=@test_image.jpg"
 # 기대값: count + detections(COCO 클래스) + image(base64)
 
 # 5. /predict 추론 테스트
-curl -s -X POST http://TAILSCALE-IP:30600/predict \
+curl -s -X POST https://serving.<LB-INGRESS-IP>.nip.io/predict \
   -F "file=@test_image.jpg" | \
   python3 -c 'import sys,json; d=json.load(sys.stdin); print(d.get("model"), d.get("count"))'
+# fallback: curl -s -X POST http://<MASTER-IP>:30600/predict -F "file=@test_image.jpg"
 # 기대값: visdrone-yolov8@champion (v5)  N
 ```
 
@@ -242,19 +247,21 @@ kubectl logs -n ai-team -l app=yolov8-serving --tail=50
 chrome://flags/#unsafely-treat-insecure-origin-as-secure
 ```
 
-`http://TAILSCALE-IP:30600` 추가 → Enabled → Chrome 재시작
+`http://<MASTER-IP>:30600` 추가 → Enabled → Chrome 재시작
 
-> **근본 해결:** Ingress + TLS 적용 (미완료, 다음 작업 예정)
+> **근본 해결:** Ingress + TLS 적용 완료 (2026-04-27). 기본 접속 주소 `https://serving.<LB-INGRESS-IP>.nip.io` 사용 시 이 설정 불필요.
 
 ### champion 모델 미반영
 
 ```bash
 # champion alias 현황 확인
-curl http://TAILSCALE-IP:30600/health
+curl https://serving.<LB-INGRESS-IP>.nip.io/health
+# fallback: curl http://<MASTER-IP>:30600/health
 # champion_ready: false → champion 로드 실패
 
 # 즉시 재로드 시도
-curl -X POST http://TAILSCALE-IP:30600/reload-champion
+curl -X POST https://serving.<LB-INGRESS-IP>.nip.io/reload-champion
+# fallback: curl -X POST http://<MASTER-IP>:30600/reload-champion
 
 # 또는 Pod 재시작
 kubectl rollout restart deployment/yolov8-serving -n ai-team
