@@ -128,6 +128,7 @@ metadata:
   name: yolov8-dag-pipeline
   namespace: ai-team
 spec:
+  podPriorityClassName: training-normal
   entrypoint: pipeline
   arguments:
     parameters:
@@ -384,5 +385,16 @@ kubectl rollout restart deployment/workflow-controller -n argo
 kubectl get pods -n argo -w
 ```
 
-## 8.참고 사진
+---
+
+## 8. 📸 참고 사진
+
 ![](../images/스크린샷%202026-04-07%20172757.png)
+
+---
+
+## 9. 🔗 관련 문서
+
+- [모델 서빙 Runbook](runbook_model_serving.md)
+- [현재 아키텍처](../overview/current-architecture.md)
+- [Ingress/TLS Runbook](runbook_ingress_tls.md)

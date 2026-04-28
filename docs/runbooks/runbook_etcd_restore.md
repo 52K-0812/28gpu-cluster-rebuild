@@ -218,3 +218,11 @@ ls -lh /data/backups/etcd/
 mount | grep nfs
 df -h | grep /data
 ```
+
+---
+
+## 7. 🔗 관련 문서
+
+- [현재 아키텍처](../overview/current-architecture.md)
+- [타임라인](../overview/timeline.md)
+```

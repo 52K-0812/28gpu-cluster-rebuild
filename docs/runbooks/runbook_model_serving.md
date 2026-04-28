@@ -122,6 +122,7 @@ spec:
     spec:
       nodeSelector:
         gpu-type: 2080ti
+      priorityClassName: serving-critical
       containers:
       - name: serving
         image: 1jkim/yolov8-serving:v1
@@ -300,3 +301,11 @@ volumeMounts:
 - 네트워크 장애 시 의존성 설치 실패로 서비스 불가
 - ConfigMap `/app` 마운트 read-only로 인해 모델 파일 다운로드 실패
 - 재현성 없음 (pip 버전 drift 가능성)
+
+---
+
+## 9. 🔗 관련 문서
+
+- [Argo DAG Runbook](runbook_argo_dag.md)
+- [현재 아키텍처](../overview/current-architecture.md)
+- [Ingress/TLS Runbook](runbook_ingress_tls.md)

@@ -1,6 +1,13 @@
 # Runbook — Ingress + TLS 서비스 추가 절차
 
-## 🎯 1. 목적
+> **목적:** NGINX Ingress + cert-manager TLS 구성 · 갱신 · 장애 대응 절차
+> **최초 구축:** 2026-04-27
+> **관리 네임스페이스:** `ingress-nginx`, `cert-manager`
+> **담당:** 관리자
+
+---
+
+## 1. 🎯 목적
 
 기존 클러스터의 임의 서비스를 host 기반 Ingress + cluster-ca self-signed TLS 구조로 노출하는 표준 절차. Phase A 결과물(`serving.INGRESS-LB-IP.nip.io`, `hub.INGRESS-LB-IP.nip.io`)을 기반으로 동일 패턴 재현.
 
@@ -8,7 +15,7 @@
 
 ---
 
-## 📋 2. 사전 체크리스트
+## 2. 📋 사전 체크리스트
 
 작업 시작 전 다음 항목 모두 통과 확인:
 
@@ -32,7 +39,7 @@ kubectl get svc <service-name> -n <namespace>
 
 ---
 
-## 🔧 3. 변수 정의
+## 3. 🔧 변수 정의
 
 작업 전 다음 값 확정:
 
@@ -54,7 +61,7 @@ kubectl get svc <service-name> -n <namespace>
 
 ---
 
-## 🚀 4. 실행 절차
+## 4. 🚀 실행 절차
 
 ### 4-1. Certificate 생성 (host 기반 + DNS SAN)
 
@@ -195,7 +202,7 @@ annotations:
 
 ---
 
-## ✅ 5. 검증 절차
+## 5. ✅ 검증 절차
 
 ### 5-1. Ingress 상태 확인
 
@@ -257,7 +264,7 @@ X509v3 Subject Alternative Name:
 
 ---
 
-## 🚨 6. 트러블슈팅 빠른 참조
+## 6. 🚨 트러블슈팅 빠른 참조
 
 ### Symptom: Fake Certificate
 
@@ -326,7 +333,7 @@ kubectl logs -n cert-manager deploy/cert-manager --tail=50
 
 ---
 
-## 🔄 7. 롤백 절차
+## 7. 🔄 롤백 절차
 
 ### Ingress만 제거 (TLS Secret 보존)
 
@@ -347,7 +354,7 @@ kubectl delete secret ${TLS_SECRET} -n ${NAMESPACE}
 
 ---
 
-## 📎 8. 서비스별 빠른 적용 예시
+## 8. 📎 서비스별 빠른 적용 예시
 
 ### Grafana
 
@@ -449,7 +456,7 @@ Basic Auth 적용 (관리자 전용).
 
 ---
 
-## 📌 9. 검증 통과 기준
+## 9. 📌 검증 통과 기준
 
 서비스 추가 작업의 완료 판정 기준:
 
@@ -467,7 +474,7 @@ Basic Auth 적용 (관리자 전용).
 
 ---
 
-## 📎 10. 관련 문서
+## 10. 📎 관련 문서
 
 - `docs/journal/4_27_Ingress_TLS_도입_및_host_기반_라우팅.md` — Phase A 작업 기록 + 함정 사례
 - `docs/runbooks/runbook_letsencrypt_dns01.md` — 공인 인증서 적용 시 (별도 Phase)
