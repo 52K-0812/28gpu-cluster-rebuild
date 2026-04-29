@@ -207,7 +207,7 @@ ssh ubuntu@LB_PUBLIC_IP "ip route show | grep 192.168.0.0/16"
 
 **결과:**
 
-```
+```text
 v100-gpu-01:    192.168.0.0/16 dev enp2s0f1 proto static scope link metric 50 ✅
 2080ti-gpu-02:  192.168.0.0/16 dev eno2 proto static scope link metric 50 ✅
 2080ti-gpu-03:  192.168.0.0/16 dev eno2 proto static scope link metric 50 ✅
@@ -226,7 +226,7 @@ kubectl get pods -n gpu-operator | grep dcgm
 
 **결과:**
 
-```
+```bash
 nvidia-dcgm-exporter-8jbsm   1/1   Running   1 (46h ago)      8d
 nvidia-dcgm-exporter-ll8g2   1/1   Running   1 (46h ago)      8d
 nvidia-dcgm-exporter-ptmbd   1/1   Running   4 (27h ago)      8d

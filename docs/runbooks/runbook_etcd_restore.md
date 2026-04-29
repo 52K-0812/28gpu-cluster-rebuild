@@ -135,7 +135,7 @@ sudo crictl --runtime-endpoint unix:///run/containerd/containerd.sock exec -i ${
 ```
 
 **기대값:**
-```
+```text
 +----------+----------+------------+------------+
 |   HASH   | REVISION | TOTAL KEYS | TOTAL SIZE |
 +----------+----------+------------+------------+
@@ -206,7 +206,7 @@ sudo /usr/local/bin/etcd-backup.sh
 
 ### 스냅샷 무결성 검증 실패
 
-```
+```text
 Error: snapshot file doesn't exist
 ```
 

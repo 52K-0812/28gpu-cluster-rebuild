@@ -46,7 +46,7 @@
 
 `proxy-public` 서비스가 `ClusterIP` 타입이었기 때문에 외부 접속용으로 `port-forward`를 systemd 서비스로 등록해 운용하고 있었다.
 
-```
+```bash
 # 등록되어 있던 포트 포워딩들
 kubectl port-forward svc/proxy-public -n ai-team --address 0.0.0.0 8000:80
 kubectl port-forward svc/portainer -n portainer --address 0.0.0.0 9443:9443
@@ -60,7 +60,7 @@ kubectl port-forward svc/monitoring-kube-prometheus-prometheus -n monitoring --a
 
 MetalLB IP Pool에 `LB_PUBLIC_IP`이 등록되어 있었고, Portainer가 이 IP를 `LoadBalancer` 타입으로 점거하고 있었다. `151`은 `master-01` OS 자체가 사용하는 메인 IP이기 때문에 다음 충돌이 발생했다.
 
-```
+```text
 master-01 OS:   "LB_PUBLIC_IP은 내 SSH/터미널 주소야"
 MetalLB:        "Portainer에 할당됐으니 내가 ARP 응답할게"
 학교 스위치:    "어? 151번 MAC이 갑자기 바뀌었네? 차단"
@@ -81,7 +81,7 @@ MetalLB:        "Portainer에 할당됐으니 내가 ARP 응답할게"
 
 ### 3-5 장애 전파 경로
 
-```
+```text
 MetalLB가 master-01 IP(151) 점거 시도
     ↓
 학교 스위치가 ARP 충돌로 패킷 드랍
@@ -311,7 +311,7 @@ kubectl patch svc portainer -n portainer \
 kubectl get svc -A | grep -E 'NodePort|LoadBalancer'
 ```
 
-```
+```text
 ai-team     proxy-public                          LoadBalancer  10.97.60.206   LB_PUBLIC_IP  80:30000/TCP
 monitoring  monitoring-grafana                    NodePort      10.104.33.176  <none>         3000:30356/TCP,80:30300/TCP
 monitoring  monitoring-kube-prometheus-prometheus NodePort      10.97.237.241  <none>         9090:30310/TCP,8080:32311/TCP

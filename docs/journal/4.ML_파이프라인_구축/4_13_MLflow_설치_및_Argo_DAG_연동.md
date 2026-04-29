@@ -12,7 +12,7 @@
 
 ## 🏗️ 2. 작업 흐름
 
-```
+```text
 [MLflow Tracking Server (mlflow 네임스페이스)]
     ├→ Backend: PostgreSQL (K8s Deployment)
     │           └→ PVC → NAS (실험 메타데이터)
@@ -291,7 +291,7 @@ sudo systemctl status kubectl-mlflow-forward.service
 
 ### MLflow 내부 DNS 주소
 
-```
+```text
 http://mlflow-server.mlflow.svc.cluster.local:5000
 ```
 
@@ -382,7 +382,7 @@ kubectl get workflowtemplate yolov8-dag-pipeline -n ai-team
 
 ### 문제 1: `No module named 'psycopg2'`
 
-```
+```text
 2026/04/13 02:23:59 ERROR mlflow.cli: No module named 'psycopg2'
 ```
 
@@ -408,7 +408,7 @@ args:
 
 **해결:** NodePort + systemd port-forward 방식으로 접속 (JupyterHub, Argo와 동일 패턴 유지)
 
-```
+```text
 LB_PUBLIC_IP:30010  → 서버실 내부 접속
 TAILSCALE_HOST:30010   → Tailscale VPN 외부 접속
 ```

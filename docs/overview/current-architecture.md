@@ -17,7 +17,7 @@
 | 2080ti-gpu-02 | Worker             | 2080Ti × 8 | `<WORKER-IP-04>` |
 | 2080ti-gpu-03 | Worker             | 2080Ti × 7 | `<WORKER-IP-05>` |
 | 2080ti-gpu-04 | Worker             | 2080Ti × 8 | `<WORKER-IP-06>` |
-| NAS (nas-01)  | 스토리지               | —          | `<MASTER-IP>` (1G) / `10.10.10.157` (10G) |
+| NAS (nas-01)  | 스토리지               | —          | `<NAS-1G-IP>` (1G) / `<NAS-10G-IP>` (10G) |
 
 - **K8s 버전:** v1.29.15
 - **OS:** Ubuntu 22.04.5 LTS
@@ -31,7 +31,7 @@
 
 ## 2. 🌐 네트워크 구조
 
-```
+```text
 [외부 접속]
     Tailscale VPN (<TAILSCALE-IP>) → master-01
     NGINX Ingress (<LB-INGRESS-IP>) → 캠퍼스 내부망 직접 접속
@@ -40,14 +40,14 @@
     master-01 ↔ master-02 ↔ GPU 노드 ↔ NAS
     K8s API, NFS 제어, 일반 트래픽
 
-[데이터망 — 10GbE, 10.10.10.x]
-    GPU 노드(153~156) ↔ NAS(157)
+[데이터망 — 10GbE, <DATA-NET-RANGE>]
+    GPU 노드(<GPU-NODE-10G-RANGE>) ↔ NAS(<NAS-10G-IP>)
     학습 데이터 전송, NFS 실제 I/O
     목표 속도: 9Gbps 이상
 ```
 
 **핵심 설계:**
-- master-01은 1G망만 연결됨. NFS Provisioner 제어는 1G 주소로, GPU 노드의 실제 데이터 접근은 10G망(10.10.10.x)으로 분리.
+- master-01은 1G망만 연결됨. NFS Provisioner 제어는 1G 주소로, GPU 노드의 실제 데이터 접근은 10G망(<DATA-NET-RANGE>)으로 분리.
 - MetalLB L2 모드: IP Pool은 캠퍼스 스위치에 허용 등록된 대역만 사용. 노드 자체 IP를 Pool에 포함하지 않음(3_31 장애 교훈).
 
 **MetalLB IP 배정:**
@@ -155,7 +155,7 @@
 
 ## 7. 🔄 ML 파이프라인 (Argo Workflows)
 
-```
+```text
 [Git push → GitHub Actions (Self-hosted Runner on master-01)]
     │ ~16s
     ▼
@@ -235,7 +235,7 @@
 
 ### champion 모델 로드 방식
 
-```
+```text
 MLflow alias "champion" 조회
     └→ version 번호 확인
     └→ 1순위: NAS /mnt/datasets/models/visdrone-v{version}.pt 직접 로드
@@ -253,7 +253,7 @@ MLflow alias "champion" 조회
 
 ## 10. ⚙️ CI/CD
 
-```
+```text
 [개발자] → git push → main
     │
 [GitHub Actions (Private Repo)]
@@ -373,6 +373,7 @@ MLflow alias "champion" 조회
 | JupyterHub backup 파일 권한 | 664 (권고: 600) | `~/backup/jupyterhub/*.yaml` — proxy.secretToken 평문 포함 |
 | K8s 업그레이드 | v1.29 (EOL 예정) | v1.31 업그레이드 runbook 작성 예정, 실작업 미진행 |
 | buildkitd 서비스 등록 | nohup 백그라운드 | master-01 재부팅 시 재실행 필요 |
+| monitoring-values.yaml NodePort/PVC 미명시 | kubectl patch 수정값이 Helm values에 미반영 | 다음 chart 재렌더링 시 NodePort(30300/30310) · grafana-pvc 초기화 위험. values 파일에 명시 필요. (INC-2026-04-28 재발 방지 참조) |
 
 ---
 

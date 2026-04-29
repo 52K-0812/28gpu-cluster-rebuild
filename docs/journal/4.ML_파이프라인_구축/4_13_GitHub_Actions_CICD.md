@@ -12,7 +12,7 @@
 
 ## 🏗️ 2. 작업 흐름
 
-```
+```text
 [개발자 로컬]
     │ git push → main 브랜치
     ▼
@@ -106,7 +106,7 @@ sudo ./svc.sh status
 
 **정상 출력:**
 
-```
+```text
 ● actions.runner.YOUR_GITHUB_USERNAME-28gpu-cluster-cicd.master-01.service
      Active: active (running)
 ```
@@ -219,7 +219,7 @@ git push origin main
 kubectl get workflows -n ai-team --sort-by=.metadata.creationTimestamp | tail -3
 ```
 
-```
+```text
 yolov8-dag-pipeline-fxgn5   Succeeded   5d
 yolov8-dag-pipeline-fwd6q   Succeeded   160m
 cicd-pipeline-lk7wf         Running     2m
@@ -231,7 +231,7 @@ cicd-pipeline-lk7wf         Running     2m
 
 `http://TAILSCALE_HOST:30500` → `cicd-pipeline-lk7wf` DAG 실시간 실행 확인
 
-```
+```text
 ✅ validate-data → 🔵 train (실행 중) → evaluate → save-model
 ```
 
@@ -241,7 +241,7 @@ cicd-pipeline-lk7wf         Running     2m
 
 ### 문제 1: workflow scope 없이 push 거부
 
-```
+```text
 refusing to allow a Personal Access Token to create or update workflow
 `.github/workflows/argo-trigger.yaml` without `workflow` scope
 ```
@@ -257,7 +257,7 @@ git push origin main
 
 ### 문제 2: git push 시 Authentication failed
 
-```
+```text
 remote: Invalid username or token.
 fatal: Authentication failed
 ```

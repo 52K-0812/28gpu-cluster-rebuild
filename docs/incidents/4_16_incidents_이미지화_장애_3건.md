@@ -27,7 +27,7 @@
 
 **증상**
 
-```
+```text
 Failed to pull image "yolov8-serving:local-v1": failed to resolve reference
 "docker.io/library/yolov8-serving:local-v1": pull access denied,
 repository does not exist or may require authorization
@@ -41,7 +41,7 @@ repository does not exist or may require authorization
 K8s kubelet은 containerd의 `k8s.io` namespace 이미지만 참조한다.
 두 namespace가 격리되어 있어, `default`에 load한 이미지는 K8s에서 보이지 않음.
 
-```
+```text
 containerd namespace
   ├── default       ← nerdctl load 기본값 (K8s 미사용)
   └── k8s.io        ← kubelet 참조 namespace
@@ -70,7 +70,7 @@ ssh ubuntu@WORKER-IP \
 
 **증상**
 
-```
+```text
 Warning: Failed to create the file yolov8n.pt: Read-only file system
 curl: (23) Failed writing body (0 != 16375)
 
@@ -111,7 +111,7 @@ ConfigMap은 환경변수나 설정값 주입 용도로만 사용.
 
 **증상**
 
-```
+```text
 error: deployment "yolov8-serving" exceeded its progress deadline
 
 NAME                              READY   STATUS             NODE

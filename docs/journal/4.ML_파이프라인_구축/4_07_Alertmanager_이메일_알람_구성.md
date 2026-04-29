@@ -12,7 +12,7 @@
 
 ## 🏗️ 2. 작업 흐름
 
-```
+```text
 [Alertmanager 현재 상태 확인]
         │ kube-prometheus-stack에 이미 포함됨
         ▼
@@ -42,7 +42,7 @@ kubectl get pods -n monitoring | grep alertmanager
 
 **정상 출력:**
 
-```
+```text
 alertmanager-monitoring-kube-prometheus-alertmanager-0   2/2     Running   0    6d17h
 ```
 
@@ -209,7 +209,7 @@ curl -X POST http://localhost:9093/api/v1/alerts \
 
 테스트 알람 발송 전에 **실제 클러스터 알람**이 먼저 수신됨:
 
-```
+```text
 [FIRING:1] KubeDaemonSetRolloutStuck
 namespace = ai-team
 daemonset = continuous-image-puller

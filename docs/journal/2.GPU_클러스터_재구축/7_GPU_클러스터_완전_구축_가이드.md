@@ -27,7 +27,7 @@
 
 ## 🌐 망 분리 아키텍처
 
-```
+```text
 [master-01 (151)]
     │  1G 관리망 (MASTER-IP)
     │  → NFS 제어, K8s API, 일반 통신
@@ -45,7 +45,7 @@
 
 ## 🗺️ 작업 추천 순서
 
-```
+```text
 Phase 0: NAS 스토리지 구성
     ↓
 Phase 1: 10G 네트워크 구성 (NAS + GPU 노드)

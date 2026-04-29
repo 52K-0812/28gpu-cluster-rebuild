@@ -216,7 +216,7 @@ kubectl logs -n monitoring -l app.kubernetes.io/name=grafana \
 
 **Before:**
 
-```
+```text
 monitoring:default (공유 SA)
   ↓
 모든 Pod가 ConfigMap/Secret 읽기 가능
@@ -224,7 +224,7 @@ monitoring:default (공유 SA)
 
 **After:**
 
-```
+```text
 monitoring:grafana-sa (Grafana 전용)
   ↓
 Grafana만 ConfigMap/Secret 읽기 가능

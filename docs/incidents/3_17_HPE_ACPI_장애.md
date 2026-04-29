@@ -25,7 +25,7 @@
 
 **반복 출력 에러:**
 
-```
+```text
 ACPI Error: SMBus/IPMI/GenericSerialBus write requires Buffer of length 66, found length 32
 ACPI Exception: AE_AML_BUFFER_LIMIT, Evaluating _PMM
 ```

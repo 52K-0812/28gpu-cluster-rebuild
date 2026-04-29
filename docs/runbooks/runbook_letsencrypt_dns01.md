@@ -60,7 +60,7 @@ Cloudflare Dashboard → My Profile → API Tokens → Create Token
 
 권한 설정:
 
-```
+```text
 Zone - DNS - Edit
 Zone Resources: Include - Specific zone - <your-domain>
 ```
@@ -118,7 +118,7 @@ kubectl get secret <dns-provider-api-token-secret> -n cert-manager
 
 Cloudflare Dashboard → DNS → Records → Add Record:
 
-```
+```text
 Type: A
 Name: serving
 IPv4: INGRESS-LB-IP
@@ -126,7 +126,7 @@ Proxy: DNS only (회색 구름)   # ⛔ Proxied(주황 구름) 사용 금지
 TTL: Auto
 ```
 
-```
+```text
 Type: A
 Name: hub
 IPv4: INGRESS-LB-IP
@@ -350,7 +350,7 @@ echo | openssl s_client -connect ${INGRESS_IP}:443 \
 
 기대값:
 
-```
+```text
 issuer=C = US, O = Let's Encrypt, CN = R3
 subject=CN = serving.<your-domain>
 notBefore=...
@@ -411,7 +411,7 @@ dig _acme-challenge.serving.${DOMAIN} TXT +short
 
 ### Symptom: Rate Limit 도달
 
-```
+```text
 acme: error: 429 :: POST :: https://acme-v02.api.letsencrypt.org/...
 too many certificates already issued
 ```
@@ -490,7 +490,7 @@ spec:
 
 이 runbook을 실행할 시점 판단:
 
-```
+```text
 ☐ 본인 소유 도메인 확보됨
 ☐ Cloudflare(또는 동등 DNS API 제공자) 등록 완료
 ☐ DNS API Token 생성 완료

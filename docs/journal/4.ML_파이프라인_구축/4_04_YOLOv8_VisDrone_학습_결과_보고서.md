@@ -77,7 +77,7 @@ V100 4장 병렬 학습으로 단일 GPU 대비 약 4~5배 속도 향상.
 
 ## 💾 4. 모델 파일
 
-```
+```text
 /data/yolov8/runs/visdrone_exp16/
 ├── weights/
 │   ├── best.pt   (6.2MB) ← 최고 성능 체크포인트

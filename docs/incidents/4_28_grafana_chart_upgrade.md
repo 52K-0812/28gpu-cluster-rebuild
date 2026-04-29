@@ -38,7 +38,7 @@
 
 `--version` 플래그 미사용으로 Helm이 최신 chart를 자동 선택했다.
 
-```
+```text
 이전: kube-prometheus-stack-82.15.1 (revision 11)
 이후: kube-prometheus-stack-84.1.2  (revision 12)   ← 의도치 않은 업그레이드
 ```
@@ -61,7 +61,7 @@ datasources:
   isDefault: true
 ```
 
-```
+```text
 Error: datasource.yaml config is invalid.
 Only one datasource per organization can be marked as default
 ```

@@ -91,7 +91,7 @@ kubectl logs -n monitoring -l app.kubernetes.io/name=grafana -c grafana-sc-dashb
 
 **핵심 에러:**
 
-```
+```text
 ApiException: (403)
 Reason: Forbidden
 message: "secrets is forbidden: User \"system:serviceaccount:monitoring:default\" 
@@ -232,7 +232,7 @@ Grafana 웹 UI 접속 → 대시보드 목록 전체 로드 완료 🎉
 
 ### 6-1. 진단 순서의 중요성
 
-```
+```text
 Pod 상태 확인 (Running) 
     ↓ (정상이면)
 Pod 네트워크 연결 확인 (ping Pod IP)

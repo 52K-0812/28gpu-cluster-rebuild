@@ -47,7 +47,7 @@ kubectl get nodes
 
 **정상 결과:**
 
-```
+```text
 NAME        STATUS   ROLES           AGE
 master-01   Ready    control-plane   Xm
 ```
@@ -62,4 +62,4 @@ master-01   Ready    control-plane   Xm
 - master-01 노드 상태 `NotReady` → `Ready` 전환 확인
 - 다음 단계: 마스터 노드 스케줄링 허용 (Taint 해제)
 
-![자료사진](../images/Pasted image 20260320154933.png)
+<!-- 이미지 파일 누락: Pasted image 20260320154933.png (Obsidian 첨부파일 미export) -->

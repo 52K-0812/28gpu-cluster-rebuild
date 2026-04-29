@@ -21,7 +21,7 @@
 
 **파이프라인 흐름:**
 
-```
+```text
 [validate-data]
     │ VisDrone 데이터셋 존재 확인 — 실패 시 전체 중단
     ▼
@@ -365,7 +365,7 @@ kubectl describe workflow <workflow-name> -n ai-team | tail -20
 
 ### shared memory 부족 오류
 
-```
+```text
 RuntimeError: unable to write to file </torch_...>: No space left on device
 ```
 

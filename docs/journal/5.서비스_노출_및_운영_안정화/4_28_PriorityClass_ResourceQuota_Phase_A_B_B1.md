@@ -13,7 +13,7 @@
 
 ## 🏗️ 2. 작업 흐름
 
-```
+```text
 Phase A: PriorityClass 2종 신규 정의 (serving-critical, training-normal)
     ↓
 Phase B: 5개 컴포넌트에 system-cluster-critical 적용
@@ -107,7 +107,7 @@ kubectl apply -f ~/quota-priority/phase-a/priority-classes.yaml
 ```
 
 검증:
-```
+```text
 serving-critical    1000000    false    생성 완료
 training-normal     100        false    생성 완료
 ```
@@ -259,7 +259,7 @@ kubectl patch svc monitoring-kube-prometheus-prometheus -n monitoring \
 
 **증상**
 
-```
+```text
 Error: UPGRADE FAILED: values don't meet the specifications of the schema(s)
 - at '/hub': additional properties 'podPriorityClassName' not allowed
 - at '/proxy/chp': additional properties 'priorityClassName' not allowed
@@ -288,7 +288,7 @@ Z2JH chart의 `extraPodSpec` escape hatch를 사용하는 방식으로 수정. (
 | mlflow-postgres | system-cluster-critical | Running |
 | mlflow-server | system-cluster-critical | HTTP 200 |
 
-```
+```text
 FastAPI /health: champion_ready=true, champion_version=7
 JupyterHub singleuser Pod (jupyter-x-52k-0812, jupyter-yeeeho): 영향 없음
 ```
@@ -303,7 +303,7 @@ JupyterHub singleuser Pod (jupyter-x-52k-0812, jupyter-yeeeho): 영향 없음
 
 ## 📋 7. PriorityClass 현황 요약
 
-```
+```text
 system-cluster-critical (2000000000)
   └─ cert-manager (3개)
   └─ argo-workflows (2개)

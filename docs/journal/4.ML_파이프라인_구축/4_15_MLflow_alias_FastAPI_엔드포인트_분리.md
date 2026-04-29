@@ -14,7 +14,7 @@
 
 작업 전 상태:
 
-```
+```text
 Argo DAG → visdrone-v1.pt NAS 저장
                     ↕ 연결 끊김
 FastAPI /predict → yolov8n.pt (COCO pretrained, 전혀 다른 모델)
@@ -25,7 +25,7 @@ FastAPI /predict → yolov8n.pt (COCO pretrained, 전혀 다른 모델)
 
 작업 후:
 
-```
+```text
 Argo DAG → MLflow Registry 등록 → alias "champion" 지정
                                           ↓ 연결됨
 FastAPI /predict → MLflow alias 조회 → NAS 파일 로드 → 추론
@@ -35,7 +35,7 @@ FastAPI /predict → MLflow alias 조회 → NAS 파일 로드 → 추론
 
 ## 🏗️ 2. 전체 흐름
 
-```
+```text
 [git push → GitHub Actions → Argo DAG 트리거]
     │
     ▼
@@ -139,7 +139,7 @@ model = YOLO(nas_path)  # ← YOLO API 완전 호환
 장기적으로는 NAS 파일 경로를 별도 메타데이터로 저장하거나,  
 Registry version과 파일명을 명시적으로 연결하는 방식으로 개선이 필요하다.
 
-```
+```text
 MLflow alias "champion" → version 4
 NAS 파일: /mnt/datasets/models/visdrone-v4.pt
 ```
@@ -286,7 +286,7 @@ curl http://TAILSCALE-IP:30600/health
 
 ### 6.3 로그 확인
 
-```
+```text
 ✅ COCO demo 모델 로드 완료
 ✅ champion v4 NAS 로드 완료: /mnt/datasets/models/visdrone-v4.pt
 INFO:     Application startup complete.

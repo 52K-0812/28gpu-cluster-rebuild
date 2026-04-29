@@ -231,7 +231,7 @@ echo | openssl s_client \
 ```
 
 기대값:
-```
+```text
 issuer=CN = cluster-ca
 subject=CN = ${HOST}
 ```
@@ -248,7 +248,7 @@ kubectl get secret ${TLS_SECRET} -n ${NAMESPACE} \
 ```
 
 기대값:
-```
+```text
 X509v3 Subject Alternative Name:
     DNS:${HOST}, IP Address:INGRESS-LB-IP, IP Address:TAILSCALE-IP
 ```
@@ -275,7 +275,7 @@ kubectl logs -n ingress-nginx deploy/ingress-nginx-controller --tail=100 \
 ```
 
 대표 메시지:
-```
+```text
 ssl certificate "${NAMESPACE}/${TLS_SECRET}" does not contain a Common Name 
 or Subject Alternative Name for server "${HOST}"
 ```
@@ -460,7 +460,7 @@ Basic Auth 적용 (관리자 전용).
 
 서비스 추가 작업의 완료 판정 기준:
 
-```
+```text
 ☐ Certificate READY=True
 ☐ Secret tls.crt에 DNS SAN으로 host 포함 확인
 ☐ Ingress ADDRESS=INGRESS-LB-IP 표시

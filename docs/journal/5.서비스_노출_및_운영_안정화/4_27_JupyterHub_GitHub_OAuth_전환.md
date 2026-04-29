@@ -6,14 +6,14 @@
 > **작업 목적:** JupyterHub 인증 방식을 DummyAuthenticator에서 GitHubOAuthenticator로 전환. 허용 계정 기반 접근 제어 적용.
 > **대상 서버:** master-01
 > **작업 환경:** Kubernetes v1.29, ai-team 네임스페이스, JupyterHub Helm chart 4.3.3, oauthenticator 17.4.0
-> **선행 작업:** Ingress + TLS 적용 완료 (`https://hub.112-76-56-162.nip.io` 운영 중)
+> **선행 작업:** Ingress + TLS 적용 완료 (`https://hub.<LB-INGRESS-IP-DASHED>.nip.io` 운영 중)
 > **최종 결과:** GitHubOAuthenticator 전환 완료. 허용 계정 3명 로그인 검증. 허용 외 계정 403 차단 확인. DummyAuth PVC 및 Hub DB 레코드 정리 완료.
 
 ---
 
 ## 🏗️ 2. 작업 흐름
 
-```
+```text
 oauthenticator 내장 확인 (Hub Pod exec)
     ↓
 GitHub OAuth App 생성 (callback URL 설정)
@@ -83,8 +83,8 @@ GitHub → Settings → Developer settings → OAuth Apps → New OAuth App
 | 항목 | 값 |
 |---|---|
 | Application name | 28GPU Cluster JupyterHub |
-| Homepage URL | `https://hub.112-76-56-162.nip.io` |
-| Authorization callback URL | `https://hub.112-76-56-162.nip.io/hub/oauth_callback` |
+| Homepage URL | `https://hub.<LB-INGRESS-IP-DASHED>.nip.io` |
+| Authorization callback URL | `https://hub.<LB-INGRESS-IP-DASHED>.nip.io/hub/oauth_callback` |
 
 ### 4-3. K8s Secret 등록
 
@@ -136,7 +136,7 @@ hub:
     JupyterHub:
       authenticator_class: github
     GitHubOAuthenticator:
-      oauth_callback_url: https://hub.112-76-56-162.nip.io/hub/oauth_callback
+      oauth_callback_url: https://hub.<LB-INGRESS-IP-DASHED>.nip.io/hub/oauth_callback
     Authenticator:
       allowed_users:
         - 52K-0812
@@ -259,14 +259,14 @@ kubectl delete pod jupyter-member-01 -n ai-team --ignore-not-found
 kubectl get pvc -n ai-team
 ```
 
-Hub Admin 페이지 (`https://hub.112-76-56-162.nip.io/hub/admin`) 에서 member-01~05 사용자 레코드 → Stop server → Delete user 순으로 정리 완료.
+Hub Admin 페이지 (`https://hub.<LB-INGRESS-IP-DASHED>.nip.io/hub/admin`) 에서 member-01~05 사용자 레코드 → Stop server → Delete user 순으로 정리 완료.
 
 ---
 
 ## ✅ 5. 최종 검증 결과
 
 ```bash
-curl -k -s -o /dev/null -w "%{http_code}\n" https://hub.112-76-56-162.nip.io/hub/login
+curl -k -s -o /dev/null -w "%{http_code}\n" https://hub.<LB-INGRESS-IP-DASHED>.nip.io/hub/login
 # 200
 
 grep -iE "github|sign in" /tmp/jupyterhub-login.html
@@ -294,7 +294,7 @@ grep -iE "github|sign in" /tmp/jupyterhub-login.html
 | 허용 사용자 | member-01~05 | 52K-0812, Yeeeho, Da-Woon-J |
 | 관리자 | 없음 | 52K-0812 |
 | Client 인증 정보 | 없음 | K8s Secret `jupyterhub-github-oauth` |
-| 접속 URL | `http://TAILSCALE-IP:30000` | `https://hub.112-76-56-162.nip.io` |
+| 접속 URL | `http://TAILSCALE-IP:30000` | `https://hub.<LB-INGRESS-IP-DASHED>.nip.io` |
 
 ---
 

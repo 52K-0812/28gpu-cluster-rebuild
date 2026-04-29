@@ -24,7 +24,7 @@
 
 **서빙 구조:**
 
-```
+```text
 [브라우저]
     │ 웹캠 캡처 or 이미지 업로드
     ▼
@@ -131,6 +131,8 @@ spec:
         resources:
           limits:
             nvidia.com/gpu: "1"
+          # cpu/memory: 미선언 → ai-team LimitRange(ai-team-default-compute) 자동 주입
+          # defaultRequest: cpu 500m · mem 1Gi  |  default(limit): cpu 4 · mem 16Gi
         livenessProbe:
           httpGet:
             path: /health
@@ -244,7 +246,7 @@ kubectl logs -n ai-team -l app=yolov8-serving --tail=50
 
 **임시 해결 (Chrome 플래그):**
 
-```
+```text
 chrome://flags/#unsafely-treat-insecure-origin-as-secure
 ```
 

@@ -12,7 +12,7 @@
 
 ## 🏗️ 2. 작업 흐름
 
-```
+```text
 [Helm으로 Argo Workflows 설치 → argo 네임스페이스]
         │ MetalLB IP 160 할당
         ▼
@@ -52,7 +52,7 @@ kubectl get pods -n argo
 
 **정상 출력:**
 
-```
+```text
 NAME                                                 READY   STATUS    RESTARTS   AGE
 argo-workflows-server-8c4654bc8-8vrpx                1/1     Running   0          28s
 argo-workflows-workflow-controller-cffc67b47-pznb5   1/1     Running   0          28s
@@ -99,7 +99,7 @@ kubectl get svc -n argo
 
 **정상 출력:**
 
-```
+```text
 NAME                    TYPE           CLUSTER-IP       EXTERNAL-IP     PORT(S)
 argo-workflows-server   LoadBalancer   10.111.109.193   (control-plane-public-ip)   2746:30150/TCP
 ```
@@ -249,7 +249,7 @@ kubectl apply -f yolov8-visdrone-workflow.yaml
 
 Workflow 실행 완료 후 아래 에러가 발생한다:
 
-```
+```text
 wait: Error (exit code 64): workflowtaskresults.argoproj.io is forbidden:
 User "system:serviceaccount:ai-team:default" cannot create resource
 "workflowtaskresults" in API group "argoproj.io" in the namespace "ai-team"
@@ -332,7 +332,7 @@ kubectl get rolebinding argo-workflow-rolebinding -n ai-team
 
 ### 문제 1: workflow-controller CrashLoopBackOff (install.yaml 방식)
 
-```
+```text
 error="the server could not find the requested resource (get workflows.argoproj.io)"
 ```
 
@@ -341,7 +341,7 @@ error="the server could not find the requested resource (get workflows.argoproj.
 
 ### 문제 2: PVC 경로 불일치
 
-```
+```text
 FileNotFoundError: '/mnt/data/VisDrone/data.yaml' does not exist
 ```
 
@@ -356,7 +356,7 @@ kubectl get pvc <pvc-name> -n <namespace> -o jsonpath='{.spec.volumeName}' \
 
 ### 문제 3: visdrone.yaml path 불일치
 
-```
+```text
 FileNotFoundError: missing path '/mnt/data/datasets/visdrone/VisDrone2019-DET-val/images'
 ```
 
@@ -373,7 +373,7 @@ sudo sed -i 's|path: /data/datasets/visdrone|path: /mnt/datasets/visdrone|' \
 
 ### 문제 4: shared memory 부족 (DDP 멀티GPU)
 
-```
+```text
 RuntimeError: unable to write to file </torch_...>: No space left on device (28)
 ```
 

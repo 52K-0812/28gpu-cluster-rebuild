@@ -12,7 +12,7 @@
 
 ## 🏗️ 2. 작업 흐름
 
-```
+```text
 [VisDrone 데이터셋 다운로드 → NAS /data/datasets/visdrone/]
         │ YOLO 포맷 변환 (convert_visdrone.py)
         ▼
@@ -53,7 +53,7 @@ unzip VisDrone2019-DET-train.zip && unzip VisDrone2019-DET-val.zip
 
 **결과 구조:**
 
-```
+```text
 /data/datasets/visdrone/
 ├── VisDrone2019-DET-train/
 │   ├── images/   (6,471장)
@@ -220,7 +220,7 @@ Tailscale: `http://(vpn-endpoint)3000` → DCGM Dashboard → V100 GPU 사용률
 
 ### 문제 1: CUDA no kernel image error
 
-```
+```text
 CUDA error: no kernel image is available for execution on the device
 ```
 
@@ -233,7 +233,7 @@ CUDA error: no kernel image is available for execution on the device
 
 ### 문제 2: Shared Memory 부족
 
-```
+```text
 RuntimeError: unable to write to file </torch_...>: No space left on device
 ```
 

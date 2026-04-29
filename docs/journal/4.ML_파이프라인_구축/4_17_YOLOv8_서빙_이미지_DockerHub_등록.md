@@ -13,7 +13,7 @@
 
 ## 🏗️ 2. 작업 흐름
 
-```
+```text
 [master-01] nerdctl login → nerdctl tag → nerdctl push
     ↓
 DockerHub 1jkim/yolov8-serving:v1 등록

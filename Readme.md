@@ -10,7 +10,7 @@
 >
 > 프로젝트 시작 시점에는 인프라 운영 경험이 많지 않았지만 AI를 문제 해결 보조 도구로 활용해 실제 작업을 진행했고 부족한 개념은 이후 학습과 문서화를 통해 보완했습니다.
 
-![자료사진](./docs/images/20260312_204425.jpg)
+![자료사진](docs/images/20260312_204425.jpg)
 
 ---
 
@@ -40,7 +40,7 @@
 
 클러스터를 처음 만졌을 때는 리눅스 명령어도 낯설었습니다. AI를 문제 해결 도구로 적극 활용하며 빠르게 실행했고, 모든 작업을 저널 형식으로 기록해 쌓인 문서를 다시 학습 자료로 삼아 기초 개념까지 역방향으로 이해해 나갔습니다. 속도보다 기록을 먼저 챙겼고, 그 기록이 이 레포를 구성합니다.
 
-![4장뿐이였던메뉴얼](./docs/images/KakaoTalk_20260413_143557870.jpg)
+![4장뿐이였던메뉴얼](docs/images/KakaoTalk_20260413_143557870.jpg)
 
 ---
 
@@ -141,7 +141,7 @@ Phase 5  서비스 노출 및 운영 안정화 (4/27 ~ 4/28)
 
 > 소프트웨어 설정이 아닌 **물리 하드웨어 재배치**로 해결한 사례입니다.
 
-![자료사진](./docs/images/20260323_182524.jpg)
+![자료사진](docs/images/20260323_182524.jpg)
 
 ---
 
@@ -151,7 +151,7 @@ Phase 5  서비스 노출 및 운영 안정화 (4/27 ~ 4/28)
 
 > 완벽한 28장보다 지금 동작하는 27장이 더 가치 있다는 트레이드오프 판단입니다.
 
-![자료사진](./docs/images/20260324_140843.jpg)
+![자료사진](docs/images/20260324_140843.jpg)
 
 ---
 
@@ -282,9 +282,9 @@ passwd ubuntu && sync && reboot -f
 
 세 단계 완료 후 0번 SSD를 `Global Hot Spare`로 지정 → OS 미러링 자동 복구, RAID 5 27.3TB 재생성.
 
-![자료사진](./docs/images/20260316_130432.jpg)
-![자료사진](./docs/images/20260316_184714.jpg)
-![자료사진](./docs/images/20260316_191154.jpg)
+![자료사진](docs/images/20260316_130432.jpg)
+![자료사진](docs/images/20260316_184714.jpg)
+![자료사진](docs/images/20260316_191154.jpg)
 
 ---
 
@@ -420,6 +420,8 @@ sudo systemctl disable kubectl-jupyterhub.service
 ## 📁 작업 문서
 
 > 현재 클러스터 구조 한 장 요약 → [**overview/current-architecture.md**](docs/overview/current-architecture.md)
+> 클러스터 구성도 (Mermaid 다이어그램) → [**overview/cluster-diagram.md**](docs/overview/cluster-diagram.md)
+> 작업 타임라인 상세 → [**overview/timeline.md**](docs/overview/timeline.md)
 > 운영 절차 → [**docs/runbooks/**](docs/runbooks/)
 
 ### 1. CHEETAH 클러스터 복구

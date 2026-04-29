@@ -20,7 +20,7 @@
 
 ## 🏗️ 2. 작업 구성 (Architecture)
 
-```
+```text
 [팀원 브라우저]
       │ Tailscale VPN
       ▼
@@ -52,7 +52,7 @@ kubectl get namespace ai-team
 
 **결과:**
 
-```
+```text
 NAME      STATUS   AGE
 ai-team   Active   2d11h
 ```
@@ -230,7 +230,7 @@ helm install jupyterhub jupyterhub/jupyterhub \
 
 **Pod 상태 확인:**
 
-```
+```text
 NAME                              READY   STATUS    AGE
 continuous-image-puller-*         1/1     Running   5m46s  (× 6, 전 노드)
 hub-54595b9fd6-m9ssd              1/1     Running   5m46s
@@ -281,7 +281,7 @@ sudo systemctl enable --now kubectl-jupyterhub
 - JupyterLab 브라우저 접속 및 로그인 정상 확인.
 - Notebook / Console / Terminal 전체 기능 진입 가능.
 
-![자료사진](../images/스크린샷_2026-03-30_172818.png)
+![자료사진](../../images/스크린샷_2026-03-30_172818.png)
 
 ---
 
@@ -310,7 +310,7 @@ K8s 스케줄러가 빈 GPU 노드를 자동으로 선택하여 배치. 1차 접
 
 ### 8.3 nvidia-smi 확인
 
-```
+```text
 NVIDIA-SMI 580.126.09   Driver Version: 580.126.09   CUDA Version: 13.0
 GPU: NVIDIA GeForce RTX 2080 Ti   Memory: 11264MiB   Temp: 34°C
 ```

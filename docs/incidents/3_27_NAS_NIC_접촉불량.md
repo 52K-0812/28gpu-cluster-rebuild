@@ -27,7 +27,7 @@
 - GPU 노드(153~156)의 10G → NAS 데이터 전송 불가
 - 콘솔에 아래 에러가 초당 수회 반복 출력
 
-```
+```text
 bnx2x 0000:02:00.0 enp2s0f0: MDC/MDIO access timeout
 bnx2x: [bnx2x_state_wait:312(enp2s0f0)]timeout waiting for state
 bnx2x: [bnx2x_func_stop:9129(enp2s0f0)]FUNC_STOP ramrod failed
@@ -106,7 +106,7 @@ sudo shutdown -h now
 2. BCM57810 카드를 슬롯에서 완전히 분리 후 **꽉 눌러 재삽입**
 3. RAID 카드(AOC-S3108)와 슬롯 위치 교체
 
-![NIC 위치교체](20260327_171926.jpg)
+![NIC 위치교체](../images/20260327_171926.jpg)
 
 | 구분    | 슬롯                             |
 | ------- | -------------------------------- |
@@ -222,14 +222,14 @@ iperf3 -c (storage-backend-ip)          # v100-gpu-01(153)에서 테스트
 
 ### 브라켓 도착 및 장착 과정
 
-![브라켓 도착](20260404_171729.jpg)
+![브라켓 도착](../images/20260404_171729.jpg)
 
 > _AliExpress에서 주문한 BCM57810 전용 브라켓 도착_
 
-![브라켓 장착 완료](20260404_172138.jpg)
+![브라켓 장착 완료](../images/20260404_172138.jpg)
 
 > _브라켓 장착 후 BCM57810 NIC — 포트 2개 정상 노출_
 
-![NAS 내부 장착](20260404_172417.jpg)
+![NAS 내부 장착](../images/20260404_172417.jpg)
 
 > _NAS nas-01 서버 내부 — PCIe 슬롯에 브라켓과 함께 완전 고정된 상태_

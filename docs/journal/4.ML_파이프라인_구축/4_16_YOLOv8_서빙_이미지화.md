@@ -12,7 +12,7 @@
 
 ## 🏗️ 2. 작업 흐름
 
-```
+```text
 [master-01] buildkit 설치 → nerdctl build → yolov8-serving:local-v1
     │ nerdctl save → 6.2GB tar
     ▼

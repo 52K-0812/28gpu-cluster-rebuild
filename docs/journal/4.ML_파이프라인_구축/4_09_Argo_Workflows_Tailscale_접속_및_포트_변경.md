@@ -12,7 +12,7 @@
 
 ## 🏗️ 2. 작업 흐름
 
-```
+```text
 [Helm values 수정 → servicePort: 30500]
         │
         ▼
@@ -132,7 +132,7 @@ sudo systemctl status kubectl-argo-forward.service
 
 **정상 상태 확인:**
 
-```
+```text
 ● kubectl-argo-forward.service - kubectl port-forward for Argo Workflows
      Active: active (running)
 ```

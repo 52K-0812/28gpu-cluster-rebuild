@@ -12,7 +12,7 @@
 
 ## 🏗️ 2. 작업 흐름
 
-```
+```text
 [K8s Job 제출 → ai-team 네임스페이스]
         │ GPU 노드 자동 스케줄링
         ▼
@@ -40,7 +40,7 @@ kubectl get jobs -n ai-team
 
 **결과:**
 
-```
+```text
 NAME                   COMPLETIONS   DURATION   AGE
 yolov8-coco-training   1/1           8h         22h
 ```
@@ -55,7 +55,7 @@ kubectl logs job/yolov8-coco-training -n ai-team | tail -30
 
 **최종 출력:**
 
-```
+```text
 Training Complete!
 total 13M
 -rw-r--r-- 1 root root 6.3M Apr  1 16:24 best.pt
@@ -95,7 +95,7 @@ find /data -name "best.pt" 2>/dev/null
 
 **결과:**
 
-```
+```text
 /data/ai-team-ai-datasets-pvc-d3337e51-8621-4a41-8901-18b372c14d65/yolov8/runs/coco_exp1/weights/best.pt
 ```
 

@@ -14,7 +14,7 @@
 
 ## 🏗️ 2. 작업 흐름
 
-```
+```text
 Phase C: 서빙/학습 워크로드에 PriorityClass 연결
     yolov8-serving Deployment → serving-critical
     yolov8-dag-pipeline WorkflowTemplate → training-normal
@@ -44,7 +44,7 @@ Phase A/B/B-1에서 시스템 파드에 `system-cluster-critical`을 적용했�
 
 당초 계획에서는 `spec.priorityClassName`으로 patch를 시도했으나 Argo CRD가 해당 필드를 인식하지 못했다.
 
-```
+```text
 Warning: unknown field "spec.priorityClassName"
 workflowtemplate.argoproj.io/yolov8-dag-pipeline patched (no change)
 ```
@@ -108,7 +108,7 @@ kubectl get pods -n ai-team -l app=yolov8-serving \
 ```
 
 검증 결과:
-```
+```text
 yolov8-serving-7dcd96c8bf-5jfb4   serving-critical   Running   2080ti-gpu-03
 FastAPI HTTP /health: champion_ready=true, champion_version=7
 FastAPI HTTPS /health: champion_ready=true, champion_version=7
@@ -150,7 +150,7 @@ kubectl get workflowtemplate -n ai-team \
 ```
 
 확인 결과:
-```
+```text
 NAME                    POD_PRIORITY
 yolov8-dag-pipeline     training-normal
 yolov8-visdrone-train   training-normal
@@ -239,7 +239,7 @@ kubectl describe limitrange ai-team-default-compute -n ai-team
 ```
 
 확인 결과:
-```
+```text
 Type       Resource  Min    Max   Default Request  Default Limit  Max Limit/Request Ratio
 Container  cpu       100m   16    500m             4              8
 Container  memory    256Mi  64Gi  1Gi              16Gi           16
@@ -301,7 +301,7 @@ kubectl describe resourcequota ai-team-compute-quota -n ai-team
 ```
 
 적용 직후 상태:
-```
+```text
 Resource                  Used   Hard
 --------                  ----   ----
 limits.cpu                4      256
@@ -331,7 +331,7 @@ kubectl apply --dry-run=server -f gpu-allowed-1.yaml
 
 **증상**
 
-```
+```text
 Warning: unknown field "spec.priorityClassName"
 workflowtemplate.argoproj.io/yolov8-dag-pipeline patched (no change)
 ```
@@ -373,7 +373,7 @@ Argo WorkflowTemplate CRD(v1alpha1)는 `spec.priorityClassName` 필드를 정의
 
 ### LimitRange (ai-team-default-compute)
 
-```
+```text
 Type       Resource  Min    Max   Default Request  Default Limit  Max Limit/Request Ratio
 Container  cpu       100m   16    500m             4              8
 Container  memory    256Mi  64Gi  1Gi              16Gi           16
@@ -381,7 +381,7 @@ Container  memory    256Mi  64Gi  1Gi              16Gi           16
 
 ### ResourceQuota (ai-team-compute-quota) — 2026-04-28 기준
 
-```
+```text
 Resource                  Used   Hard
 --------                  ----   ----
 requests.cpu              1      80
