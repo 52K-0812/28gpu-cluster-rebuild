@@ -18,7 +18,7 @@
 
 | 항목     | 내용                                                                                       |
 | -------- | ------------------------------------------------------------------------------------------ |
-| **기간** | 2026년 3월 12일 ~ 진행중                                                                   |
+| **기간** | 2026년 3월 12일 ~ 4월 28일(재구축 종료)                                                    |
 | **역할** | 단독 수행 (시스템 복구 · 인프라 설계 · ML 파이프라인 구축 전 과정)                         |
 | **환경** | 학교 서버실 온프레미스 GPU 클러스터                                                        |
 | **목표** | 방치된 GPU 클러스터를 AI 학습 파이프라인과 서비스 접속 환경이 동작하는 MLOps 인프라로 전환 |
@@ -46,32 +46,32 @@
 
 ## ✅ 최종 결과
 
-| 항목              | 결과                                                                                                 |
-| ----------------- | ---------------------------------------------------------------------------------------------------- |
-| 총 GPU            | V100 4장 + 2080Ti 23장 = **27장 통합**                                                               |
-| 스토리지          | **27.3TB** NFS 마운트 완료                                                                           |
-| 내부 네트워크     | **전 노드 ~9Gbps** (1G → 10G, 약 10배)                                                               |
-| 모니터링          | Grafana GPU 실시간 대시보드 (온도/전력/메모리)                                                       |
-| Ingress Gateway   | NGINX Ingress Controller + cert-manager 도입, 단일 IP `INGRESS-LB-IP`에서 host 기반 라우팅 구성      |
-| HTTPS 접속        | `https://hub.INGRESS-LB-IP.nip.io` / `https://serving.INGRESS-LB-IP.nip.io`                          |
-| TLS               | cluster-ca self-signed 인증서, DNS SAN 포함, cert-manager 관리                                       |
-| 인증              | GitHub OAuth 적용 완료 (DummyAuthenticator 제거 — 2026-04-27)                                        |
-| 관리자 접속       | Grafana `:30300` / Prometheus `:30310` / Portainer `:30320` (Phase B Ingress 통합 예정)              |
-| 팀 환경           | JupyterHub (GitHub 계정 기반 인증, GPU 자동 배정, NFS 홈 디렉토리, Notebook 셀 실행 검증 완료)       |
-| GPU 검증          | TensorFlow / PyTorch CUDA 인식 · MNIST 학습 동작 검증                                                |
-| ML 학습           | YOLOv8 COCO mAP@0.5 46.8% / VisDrone mAP@0.5 33.4% (V100 4장 DDP)                                    |
-| 알람              | GPU 온도/메모리/노드 다운 3종 → Gmail 자동 통보                                                      |
-| 워크플로우        | Argo Workflows — 팀원 웹 UI로 학습 Job 제출 가능                                                     |
-| MLflow            | 실험 추적 · params 105개 + metrics 자동 기록 · Registry alias(champion) 기반 버전 관리               |
-| 모델 서빙         | FastAPI `/predict`(champion) · `/predict-demo`(COCO) · `https://serving.INGRESS-LB-IP.nip.io` · 77ms |
-| 워크로드 우선순위 | PriorityClass 4계층 도입 완료 — 시스템 파드 eviction 보호, 서빙/학습 계층화                          |
-| LimitRange        | `ai-team-default-compute` — 컨테이너 기본 request/limit 자동 주입, min/max 강제 (2026-04-28)         |
-| ResourceQuota     | `ai-team-compute-quota` — GPU 16장 상한, CPU/Memory/Pod 네임스페이스 상한 적용 (2026-04-28)          |
-| RBAC / Namespace 격리 | `ai-team` 네임스페이스 + RBAC 격리 환경 (학생 Job 제출 권한 분리)                               |
-| etcd 정기 백업    | 호스트 crontab → NAS 자동 저장, snapshot 무결성 DR 검증 완료                                         |
-| Filebrowser       | NAS 웹 파일 탐색기 배포 (monitoring 네임스페이스)                                                    |
-| GitHub Actions CI/CD | 코드 push → Argo Workflow 자동 트리거 파이프라인 (16초 완료)                                      |
-| 구축 기간         | **약 7주** (3/12 ~ 4/28)                                                                             |
+| 항목                  | 결과                                                                                                 |
+| --------------------- | ---------------------------------------------------------------------------------------------------- |
+| 총 GPU                | V100 4장 + 2080Ti 23장 = **27장 통합**                                                               |
+| 스토리지              | **27.3TB** NFS 마운트 완료                                                                           |
+| 내부 네트워크         | **전 노드 ~9Gbps** (1G → 10G, 약 10배)                                                               |
+| 모니터링              | Grafana GPU 실시간 대시보드 (온도/전력/메모리)                                                       |
+| Ingress Gateway       | NGINX Ingress Controller + cert-manager 도입, 단일 IP `INGRESS-LB-IP`에서 host 기반 라우팅 구성      |
+| HTTPS 접속            | `https://hub.INGRESS-LB-IP.nip.io` / `https://serving.INGRESS-LB-IP.nip.io`                          |
+| TLS                   | cluster-ca self-signed 인증서, DNS SAN 포함, cert-manager 관리                                       |
+| 인증                  | GitHub OAuth 적용 완료 (DummyAuthenticator 제거 — 2026-04-27)                                        |
+| 관리자 접속           | Grafana `:30300` / Prometheus `:30310` / Portainer `:30320` (Phase B Ingress 통합 예정)              |
+| 팀 환경               | JupyterHub (GitHub 계정 기반 인증, GPU 자동 배정, NFS 홈 디렉토리, Notebook 셀 실행 검증 완료)       |
+| GPU 검증              | TensorFlow / PyTorch CUDA 인식 · MNIST 학습 동작 검증                                                |
+| ML 학습               | YOLOv8 COCO mAP@0.5 46.8% / VisDrone mAP@0.5 33.4% (V100 4장 DDP)                                    |
+| 알람                  | GPU 온도/메모리/노드 다운 3종 → Gmail 자동 통보                                                      |
+| 워크플로우            | Argo Workflows — 팀원 웹 UI로 학습 Job 제출 가능                                                     |
+| MLflow                | 실험 추적 · params 105개 + metrics 자동 기록 · Registry alias(champion) 기반 버전 관리               |
+| 모델 서빙             | FastAPI `/predict`(champion) · `/predict-demo`(COCO) · `https://serving.INGRESS-LB-IP.nip.io` · 77ms |
+| 워크로드 우선순위     | PriorityClass 4계층 도입 완료 — 시스템 파드 eviction 보호, 서빙/학습 계층화                          |
+| LimitRange            | `ai-team-default-compute` — 컨테이너 기본 request/limit 자동 주입, min/max 강제 (2026-04-28)         |
+| ResourceQuota         | `ai-team-compute-quota` — GPU 16장 상한, CPU/Memory/Pod 네임스페이스 상한 적용 (2026-04-28)          |
+| RBAC / Namespace 격리 | `ai-team` 네임스페이스 + RBAC 격리 환경 (학생 Job 제출 권한 분리)                                    |
+| etcd 정기 백업        | 호스트 crontab → NAS 자동 저장, snapshot 무결성 DR 검증 완료                                         |
+| Filebrowser           | NAS 웹 파일 탐색기 배포 (monitoring 네임스페이스)                                                    |
+| GitHub Actions CI/CD  | 코드 push → Argo Workflow 자동 트리거 파이프라인 (16초 완료)                                         |
+| 구축 기간             | **약 7주** (3/12 ~ 4/28)                                                                             |
 
 ---
 
@@ -476,14 +476,14 @@ sudo systemctl disable kubectl-jupyterhub.service
 
 ### 5. 서비스 노출 및 운영 안정화
 
-| 문서                                                                                                                                | 내용                                                                                                             |
-| ----------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------- |
-| [Ingress + TLS 도입 및 host 기반 라우팅 ⭐](docs/journal/5.서비스_노출_및_운영_안정화/4_27_Ingress_TLS_도입_및_host_기반_라우팅.md) | NGINX Ingress Controller · cert-manager · host 라우팅 · self-signed TLS · JupyterHub WebSocket 검증              |
-| [JupyterHub GitHub OAuth 전환 ⭐](docs/journal/5.서비스_노출_및_운영_안정화/4_27_JupyterHub_GitHub_OAuth_전환.md)                   | DummyAuthenticator 제거 · GitHubOAuthenticator 적용 · allowed_users 설정                                         |
-| [PriorityClass 도입 Phase A/B/B-1 ⭐](docs/journal/5.서비스_노출_및_운영_안정화/4_28_PriorityClass_ResourceQuota_Phase_A_B_B1.md)   | PriorityClass 4계층 정의 · 시스템 파드 system-cluster-critical 적용 · MLflow 보강 · JupyterHub extraPodSpec 방식 |
+| 문서                                                                                                                                                               | 내용                                                                                                                  |
+| ------------------------------------------------------------------------------------------------------------------------------------------------------------------ | --------------------------------------------------------------------------------------------------------------------- |
+| [Ingress + TLS 도입 및 host 기반 라우팅 ⭐](docs/journal/5.서비스_노출_및_운영_안정화/4_27_Ingress_TLS_도입_및_host_기반_라우팅.md)                                | NGINX Ingress Controller · cert-manager · host 라우팅 · self-signed TLS · JupyterHub WebSocket 검증                   |
+| [JupyterHub GitHub OAuth 전환 ⭐](docs/journal/5.서비스_노출_및_운영_안정화/4_27_JupyterHub_GitHub_OAuth_전환.md)                                                  | DummyAuthenticator 제거 · GitHubOAuthenticator 적용 · allowed_users 설정                                              |
+| [PriorityClass 도입 Phase A/B/B-1 ⭐](docs/journal/5.서비스_노출_및_운영_안정화/4_28_PriorityClass_ResourceQuota_Phase_A_B_B1.md)                                  | PriorityClass 4계층 정의 · 시스템 파드 system-cluster-critical 적용 · MLflow 보강 · JupyterHub extraPodSpec 방식      |
 | [PriorityClass Phase C + LimitRange Phase D + ResourceQuota Phase E ⭐](docs/journal/5.서비스_노출_및_운영_안정화/4_28_PriorityClass_ResourceQuota_Phase_C_D_E.md) | serving-critical(yolov8-serving) · training-normal(Argo WorkflowTemplate) · LimitRange · ResourceQuota(GPU 16장 상한) |
-| [Ingress + TLS Runbook](docs/runbooks/runbook_ingress_tls.md)                                                                       | 신규 서비스를 host 기반 Ingress + cluster-ca TLS로 노출하는 표준 절차                                            |
-| [Let's Encrypt DNS-01 Runbook](docs/runbooks/runbook_letsencrypt_dns01.md)                                                          | 본인 도메인 + Cloudflare DNS API 기반 공인 인증서 전환 절차                                                      |
+| [Ingress + TLS Runbook](docs/runbooks/runbook_ingress_tls.md)                                                                                                      | 신규 서비스를 host 기반 Ingress + cluster-ca TLS로 노출하는 표준 절차                                                 |
+| [Let's Encrypt DNS-01 Runbook](docs/runbooks/runbook_letsencrypt_dns01.md)                                                                                         | 본인 도메인 + Cloudflare DNS API 기반 공인 인증서 전환 절차                                                           |
 
 ### 6. 장애 기록 (incidents)
 
