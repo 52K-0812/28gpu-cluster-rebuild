@@ -11,11 +11,11 @@
 |---|---|---|---|---|
 | master-01 | Control Plane 전용 | etcd · apiserver · scheduler · controller-manager<br>GitHub Actions Runner · etcd 백업 crontab<br>**NoSchedule taint 적용** | — | `<MASTER-IP>` |
 | master-02 | 시스템 파드 전담 Worker | Prometheus · Grafana · Portainer · Alertmanager<br>JupyterHub hub/proxy · MLflow · Argo Controller<br>**NGINX Ingress Controller** | — | `<WORKER-IP-02>` |
-| v100-gpu-01 | Worker (학습 전용) | Argo DAG 학습 Job (V100 × 4 DDP) | V100 × 4 | 10.10.10.153 |
-| 2080ti-gpu-02 | Worker | 학습 · 서빙 워크로드 | 2080Ti × 8 | 10.10.10.154 |
-| 2080ti-gpu-03 | Worker | 학습 · 서빙 워크로드 | 2080Ti × 7 | 10.10.10.155 |
-| 2080ti-gpu-04 | Worker | 학습 · 서빙 워크로드 | 2080Ti × 8 | 10.10.10.156 |
-| NAS (nas-01) | 스토리지 | 28TB NFS 공유 스토리지 | — | `<MASTER-IP>` (1G) / 10.10.10.157 (10G) |
+| v100-gpu-01 | Worker (학습 전용) | Argo DAG 학습 Job (V100 × 4 DDP) | V100 × 4 | <V100-GPU-01-10G-IP> |
+| 2080ti-gpu-02 | Worker | 학습 · 서빙 워크로드 | 2080Ti × 8 | <2080TI-GPU-02-10G-IP> |
+| 2080ti-gpu-03 | Worker | 학습 · 서빙 워크로드 | 2080Ti × 7 | <2080TI-GPU-03-10G-IP> |
+| 2080ti-gpu-04 | Worker | 학습 · 서빙 워크로드 | 2080Ti × 8 | <2080TI-GPU-04-10G-IP> |
+| NAS (nas-01) | 스토리지 | 28TB NFS 공유 스토리지 | — | `<NAS-1G-IP>` (1G) / `<NAS-10G-IP>` (10G) |
 
 > **총 GPU:** V100 × 4 + 2080Ti × 23 = **27장**
 > **설계 근거:** 3_31 네트워크 장애 후 SoC 원칙 적용
@@ -32,15 +32,15 @@ graph TD
     subgraph MGMT["관리망 — 1GbE (Cisco Catalyst 2960G)"]
         M01["master-01\nControl Plane 전용\nNoSchedule taint\nGitHub Runner · etcd 백업"]
         M02["master-02\n시스템 파드 전담\nPrometheus · Grafana · Portainer\nMLflow · Argo · NGINX Ingress"]
-        NAS1G["NAS (nas-01)\n28TB\n1G: <MASTER-IP>"]
+        NAS1G["NAS (nas-01)\n28TB\n1G: <NAS-1G-IP>"]
     end
 
     subgraph DATA["데이터망 — 10GbE (NETGEAR XS508M)"]
-        G1["v100-gpu-01\nV100 × 4\n학습 전용\n10.10.10.153"]
-        G2["2080ti-gpu-02\n2080Ti × 8\n10.10.10.154"]
-        G3["2080ti-gpu-03\n2080Ti × 7\n10.10.10.155"]
-        G4["2080ti-gpu-04\n2080Ti × 8\n10.10.10.156"]
-        NAS10G["NAS (nas-01)\n10G: 10.10.10.157"]
+        G1["v100-gpu-01\nV100 × 4\n학습 전용\n<V100-GPU-01-10G-IP>"]
+        G2["2080ti-gpu-02\n2080Ti × 8\n<2080TI-GPU-02-10G-IP>"]
+        G3["2080ti-gpu-03\n2080Ti × 7\n<2080TI-GPU-03-10G-IP>"]
+        G4["2080ti-gpu-04\n2080Ti × 8\n<2080TI-GPU-04-10G-IP>"]
+        NAS10G["NAS (nas-01)\n10G: <NAS-10G-IP>"]
     end
 
     EXT1 -->|VPN| M01
@@ -243,3 +243,4 @@ graph TD
 | 2026-04-17 | 서빙 이미지 DockerHub 전환 (`1jkim/yolov8-serving:v1`), 2080ti-gpu-04 hostname nodeSelector 고정 해제 |
 | 2026-04-27 | NGINX Ingress + cert-manager TLS 완료, GitHub OAuth 완료, 서비스 맵 3분류(외부/관리자/내부) 체계로 재편, JupyterHub PVC 사용자별 자동 생성 반영 |
 | 2026-04-28 | PriorityClass 4계층 도입 (serving-critical/training-normal), INC-2026-04-28 Grafana 차트 업그레이드 장애 복구 |
+| 2026-04-29 | 내부망 IP 플레이스홀더 치환 (10.10.10.153~157 → 플레이스홀더), NAS 1G IP 레이블 오류 수정 (`<MASTER-IP>` → `<NAS-1G-IP>`) |
