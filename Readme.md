@@ -38,71 +38,9 @@
 
 단순 복구가 아닌 전면 재설계를 결정했고, Ubuntu 22.04 + Kubernetes 기반으로 클러스터를 새로 구축한 뒤 JupyterHub 팀 환경, YOLOv8 학습 파이프라인, Argo Workflows, MLflow, FastAPI 서빙, Ingress 기반 HTTPS 접속 구조까지 단계적으로 완성했습니다.
 
+클러스터를 처음 만졌을 때는 리눅스 명령어도 낯설었습니다. AI를 문제 해결 도구로 적극 활용하며 빠르게 실행했고, 모든 작업을 저널 형식으로 기록해 쌓인 문서를 다시 학습 자료로 삼아 기초 개념까지 역방향으로 이해해 나갔습니다. 속도보다 기록을 먼저 챙겼고, 그 기록이 이 레포를 구성합니다.
+
 ![4장뿐이였던메뉴얼](./docs/images/KakaoTalk_20260413_143557870.jpg)
-
----
-
-## 📦 기술 스택
-
-| 영역                  | 기술                                                  |
-| --------------------- | ----------------------------------------------------- |
-| **OS**                | Ubuntu 22.04.5 LTS                                    |
-| **Container Runtime** | Containerd                                            |
-| **Orchestration**     | Kubernetes v1.29.15                                   |
-| **CNI**               | Calico v3.27                                          |
-| **GPU 관리**          | NVIDIA GPU Operator                                   |
-| **스토리지**          | NFS (nfs-subdir-external-provisioner)                 |
-| **로드밸런서**        | MetalLB v0.13.12                                      |
-| **Ingress**           | NGINX Ingress Controller                              |
-| **TLS 관리**          | cert-manager v1.20.2 + cluster-ca self-signed         |
-| **DNS 라우팅**        | nip.io wildcard DNS 기반 host 라우팅                  |
-| **모니터링**          | Prometheus + Grafana (kube-prometheus-stack)          |
-| **GPU 모니터링**      | DCGM Exporter (Grafana Dashboard #12239)              |
-| **관리 UI**           | Portainer                                             |
-| **원격 접속**         | Tailscale VPN                                         |
-| **RAID**              | AVAGO 3108 MegaRAID (RAID 1 + RAID 5)                 |
-| **팀 환경**           | JupyterHub (Helm chart 4.3.3 / gpu-jupyter CUDA 12.0) |
-| **인증**              | GitHub OAuth (GitHubOAuthenticator)                   |
-| **ML 프레임워크**     | PyTorch, TensorFlow, Ultralytics YOLOv8               |
-| **워크플로우**        | Argo Workflows (Helm v4.0.4)                          |
-| **실험 추적**         | MLflow (PostgreSQL 백엔드, NFS Artifact 저장소)       |
-| **알람**              | Alertmanager (Gmail SMTP, PrometheusRule CRD)         |
-
----
-
-## 🧭 기술 선택 근거
-
-| 항목             | 검토한 대안           | 선택                       | 선택 근거                                                                                             |
-| ---------------- | --------------------- | -------------------------- | ----------------------------------------------------------------------------------------------------- |
-| 오케스트레이터   | Slurm, Nomad, Ray     | **Kubernetes**             | Argo · MLflow 등 MLOps 도구가 K8s 전제로 설계됨. 구직시장 범용성. Slurm은 컨테이너 재현성 관리에 약점 |
-| CNI              | Cilium, Flannel       | **Calico**                 | 온프레미스 BGP 지원, 운영 안정성, 공식 문서·커뮤니티 자료 성숙도                                      |
-| 스토리지         | Ceph, Longhorn        | **NFS**                    | 기존 NAS 하드웨어 직접 활용, 구현 단순성 우선. Ceph는 별도 클러스터 필요                              |
-| 컨테이너 런타임  | CRI-O                 | **containerd**             | GPU Operator 공식 권장 런타임                                                                         |
-| ML 파이프라인    | Kubeflow, Prefect     | **Argo Workflows**         | K8s 네이티브, 경량, 학습 진입장벽 낮음. Kubeflow는 현 규모 대비 설치 복잡도 과함                      |
-| etcd 백업 자동화 | K8s CronJob           | **호스트 crontab**         | K8s 장애 시에도 백업이 동작해야 하므로 K8s에 의존하지 않는 호스트 레벨 선택                           |
-| 서비스 노출      | 개별 NodePort/LB      | **NGINX Ingress**          | 단일 IP에서 host 기반으로 여러 서비스를 분리하고 TLS 종단을 통합 관리                                 |
-| 인증서 정책      | Let's Encrypt HTTP-01 | **cluster-ca self-signed** | 캠퍼스 네트워크의 외부 도달성 제약으로 HTTP-01 중단. 본인 도메인 확보 후 DNS-01을 별도 Phase로 분리   |
-| JupyterHub 인증  | DummyAuthenticator    | **GitHub OAuth**           | DummyAuth는 인증 없이 누구나 접근 가능. GitHub 계정 기반 접근 제어로 팀원 전용 환경 보호              |
-
----
-
-## 🏗️ 클러스터 구성
-
-| 노드          | 역할                                             | GPU        | IP                                   |
-| ------------- | ------------------------------------------------ | ---------- | ------------------------------------ |
-| master-01     | Control Plane                                    | —          | `MASTER-IP`                          |
-| master-02     | Worker (시스템 파드 + Ingress/cert-manager 전담) | —          | `WORKER-IP-02`                       |
-| v100-gpu-01   | Worker (학습 전용)                               | V100 × 4   | `WORKER-IP-03`                       |
-| 2080ti-gpu-02 | Worker                                           | 2080Ti × 8 | `WORKER-IP-04`                       |
-| 2080ti-gpu-03 | Worker                                           | 2080Ti × 7 | `WORKER-IP-05`                       |
-| 2080ti-gpu-04 | Worker                                           | 2080Ti × 8 | `WORKER-IP-06`                       |
-| NAS (nas-01)  | 스토리지                                         | —          | `NAS-IP` (1G) / `10.10.10.157` (10G) |
-
-- **총 GPU:** V100 4장 + 2080Ti 23장 = **27장**
-- **K8s 버전:** v1.29.15
-- **OS:** Ubuntu 22.04.5 LTS
-
-> 구축 당시(2026년 3월) GPU Operator · Calico · MetalLB 등 핵심 애드온의 호환성이 충분히 검증된 버전으로 v1.29를 선택했습니다. 최신 버전보다 패치가 안정적으로 쌓인 버전을 택하는 것이 온프레미스 GPU 클러스터 초기 구축에서 리스크를 줄이는 합리적인 판단이었습니다.
 
 ---
 
@@ -129,6 +67,10 @@
 | 워크로드 우선순위 | PriorityClass 4계층 도입 완료 — 시스템 파드 eviction 보호, 서빙/학습 계층화                          |
 | LimitRange        | `ai-team-default-compute` — 컨테이너 기본 request/limit 자동 주입, min/max 강제 (2026-04-28)         |
 | ResourceQuota     | `ai-team-compute-quota` — GPU 16장 상한, CPU/Memory/Pod 네임스페이스 상한 적용 (2026-04-28)          |
+| RBAC / Namespace 격리 | `ai-team` 네임스페이스 + RBAC 격리 환경 (학생 Job 제출 권한 분리)                               |
+| etcd 정기 백업    | 호스트 crontab → NAS 자동 저장, snapshot 무결성 DR 검증 완료                                         |
+| Filebrowser       | NAS 웹 파일 탐색기 배포 (monitoring 네임스페이스)                                                    |
+| GitHub Actions CI/CD | 코드 push → Argo Workflow 자동 트리거 파이프라인 (16초 완료)                                      |
 | 구축 기간         | **약 7주** (3/12 ~ 4/28)                                                                             |
 
 ---
@@ -246,6 +188,70 @@ serving.INGRESS-LB-IP.nip.io  → YOLOv8 FastAPI
 
 ---
 
+## 🏗️ 클러스터 구성
+
+| 노드          | 역할                                             | GPU        | IP                                   |
+| ------------- | ------------------------------------------------ | ---------- | ------------------------------------ |
+| master-01     | Control Plane                                    | —          | `MASTER-IP`                          |
+| master-02     | Worker (시스템 파드 + Ingress/cert-manager 전담) | —          | `WORKER-IP-02`                       |
+| v100-gpu-01   | Worker (학습 전용)                               | V100 × 4   | `WORKER-IP-03`                       |
+| 2080ti-gpu-02 | Worker                                           | 2080Ti × 8 | `WORKER-IP-04`                       |
+| 2080ti-gpu-03 | Worker                                           | 2080Ti × 7 | `WORKER-IP-05`                       |
+| 2080ti-gpu-04 | Worker                                           | 2080Ti × 8 | `WORKER-IP-06`                       |
+| NAS (nas-01)  | 스토리지                                         | —          | `NAS-IP` (1G) / `<NAS-10G-IP>` (10G) |
+
+- **총 GPU:** V100 4장 + 2080Ti 23장 = **27장**
+- **K8s 버전:** v1.29.15
+- **OS:** Ubuntu 22.04.5 LTS
+
+> 구축 당시(2026년 3월) GPU Operator · Calico · MetalLB 등 핵심 애드온의 호환성이 충분히 검증된 버전으로 v1.29를 선택했습니다. 최신 버전보다 패치가 안정적으로 쌓인 버전을 택하는 것이 온프레미스 GPU 클러스터 초기 구축에서 리스크를 줄이는 합리적인 판단이었습니다.
+
+---
+
+## 📦 기술 스택
+
+| 영역                  | 기술                                                  |
+| --------------------- | ----------------------------------------------------- |
+| **OS**                | Ubuntu 22.04.5 LTS                                    |
+| **Container Runtime** | Containerd                                            |
+| **Orchestration**     | Kubernetes v1.29.15                                   |
+| **CNI**               | Calico v3.27                                          |
+| **GPU 관리**          | NVIDIA GPU Operator                                   |
+| **스토리지**          | NFS (nfs-subdir-external-provisioner)                 |
+| **로드밸런서**        | MetalLB v0.13.12                                      |
+| **Ingress**           | NGINX Ingress Controller                              |
+| **TLS 관리**          | cert-manager v1.20.2 + cluster-ca self-signed         |
+| **DNS 라우팅**        | nip.io wildcard DNS 기반 host 라우팅                  |
+| **모니터링**          | Prometheus + Grafana (kube-prometheus-stack)          |
+| **GPU 모니터링**      | DCGM Exporter (Grafana Dashboard #12239)              |
+| **관리 UI**           | Portainer                                             |
+| **원격 접속**         | Tailscale VPN                                         |
+| **RAID**              | AVAGO 3108 MegaRAID (RAID 1 + RAID 5)                 |
+| **팀 환경**           | JupyterHub (Helm chart 4.3.3 / gpu-jupyter CUDA 12.0) |
+| **인증**              | GitHub OAuth (GitHubOAuthenticator)                   |
+| **ML 프레임워크**     | PyTorch, TensorFlow, Ultralytics YOLOv8               |
+| **워크플로우**        | Argo Workflows (Helm v4.0.4)                          |
+| **실험 추적**         | MLflow (PostgreSQL 백엔드, NFS Artifact 저장소)       |
+| **알람**              | Alertmanager (Gmail SMTP, PrometheusRule CRD)         |
+
+---
+
+## 🧭 기술 선택 근거
+
+| 항목             | 검토한 대안           | 선택                       | 선택 근거                                                                                             |
+| ---------------- | --------------------- | -------------------------- | ----------------------------------------------------------------------------------------------------- |
+| 오케스트레이터   | Slurm, Nomad, Ray     | **Kubernetes**             | Argo · MLflow 등 MLOps 도구가 K8s 전제로 설계됨. 구직시장 범용성. Slurm은 컨테이너 재현성 관리에 약점 |
+| CNI              | Cilium, Flannel       | **Calico**                 | 온프레미스 BGP 지원, 운영 안정성, 공식 문서·커뮤니티 자료 성숙도                                      |
+| 스토리지         | Ceph, Longhorn        | **NFS**                    | 기존 NAS 하드웨어 직접 활용, 구현 단순성 우선. Ceph는 별도 클러스터 필요                              |
+| 컨테이너 런타임  | CRI-O                 | **containerd**             | GPU Operator 공식 권장 런타임                                                                         |
+| ML 파이프라인    | Kubeflow, Prefect     | **Argo Workflows**         | K8s 네이티브, 경량, 학습 진입장벽 낮음. Kubeflow는 현 규모 대비 설치 복잡도 과함                      |
+| etcd 백업 자동화 | K8s CronJob           | **호스트 crontab**         | K8s 장애 시에도 백업이 동작해야 하므로 K8s에 의존하지 않는 호스트 레벨 선택                           |
+| 서비스 노출      | 개별 NodePort/LB      | **NGINX Ingress**          | 단일 IP에서 host 기반으로 여러 서비스를 분리하고 TLS 종단을 통합 관리                                 |
+| 인증서 정책      | Let's Encrypt HTTP-01 | **cluster-ca self-signed** | 캠퍼스 네트워크의 외부 도달성 제약으로 HTTP-01 중단. 본인 도메인 확보 후 DNS-01을 별도 Phase로 분리   |
+| JupyterHub 인증  | DummyAuthenticator    | **GitHub OAuth**           | DummyAuth는 인증 없이 누구나 접근 가능. GitHub 계정 기반 접근 제어로 팀원 전용 환경 보호              |
+
+---
+
 ## 🛠️ 주요 트러블슈팅
 
 > 인프라 복구 2건 + MLOps 파이프라인 운영 중 발생한 3건으로 구성했습니다. 상세 내용은 각 문서를 참고하세요.
@@ -328,41 +334,13 @@ sudo systemctl disable kubectl-jupyterhub.service
 
 ---
 
-## 🚀 완료된 작업
+## 🏁 이후 방향
 
-- [x] 학생 Job 제출용 Namespace + RBAC 격리 환경 구성
-- [x] JupyterHub GPU 환경 구축 및 CUDA 검증
-- [x] JupyterHub 다중 접속 장애 해결 및 서비스 구조 재설계
-- [x] Grafana ServiceAccount 보안 강화 (최소 권한 원칙 적용)
-- [x] 10GbE 라우팅 최적화 (GPU 노드 Pod 통신 경로 개선)
-- [x] YOLOv8 COCO 학습 완료 (mAP@0.5 46.8%, 웹캠 추론 테스트 성공)
-- [x] VisDrone 데이터셋 NAS 구축 + V100 멀티GPU DDP 학습 Job 가동
-- [x] VisDrone 학습 결과 분석 완료 (mAP@0.5 33.4%, 소형 객체 한계 분석)
-- [x] Argo Workflows 도입 — 팀원 웹 UI로 학습 Job 제출 가능
-- [x] Alertmanager GPU 알람 구성 (온도/메모리/노드 다운 → Gmail 자동 통보)
-- [x] etcd 정기 백업 구성 (호스트 crontab → NAS 자동 저장 + snapshot 무결성 DR 검증)
-- [x] MLflow 연동 — Argo DAG params/metrics 자동 기록 · 버전별 모델 저장
-- [x] GitHub Actions CI/CD — 코드 push → 자동 Argo Workflow 트리거
-- [x] FastAPI 모델 서빙 — K8s Deployment로 /predict 엔드포인트 배포 (77ms, 2080Ti GPU)
-- [x] Filebrowser — NAS 웹 파일 탐색기 배포 (monitoring 네임스페이스)
-- [x] MLflow alias + FastAPI 엔드포인트 분리 — /predict-demo(COCO), /predict(champion) 분리 + NAS 우선 로드 구조 적용
-- [x] FastAPI 웹 UI 구축 — 파일 업로드 / 웹캠 캡처 / 결과 시각화 페이지 추가
-- [x] 서빙 이미지화 — pip install 런타임 제거, nerdctl + buildkit 커스텀 이미지 빌드
-- [x] DockerHub 등록 — `1jkim/yolov8-serving:v1` push 완료, hostname nodeSelector 고정 해제
-- [x] **Ingress + TLS Phase A** — NGINX Ingress + cert-manager, JupyterHub · YOLOv8 Serving HTTPS host 라우팅, WebSocket 안정화
-- [x] **JupyterHub GitHub OAuth** — DummyAuthenticator 제거, GitHubOAuthenticator 전환 완료
-- [x] **PriorityClass 4계층 도입 (Phase A/B/B-1)** — system-cluster-critical / serving-critical / training-normal / default 체계 구축. cert-manager · argo · monitoring · ingress-nginx · jupyterhub · mlflow 시스템 파드 보호 완료
-- [x] **PriorityClass Phase C** — yolov8-serving `serving-critical` 적용, yolov8-dag-pipeline · yolov8-visdrone-train WorkflowTemplate `training-normal` 적용 (spec.podPriorityClassName)
-- [x] **LimitRange (Phase D)** — ai-team 네임스페이스 컨테이너 기본 request/limit 자동 주입 (defaultRequest: cpu=500m/mem=1Gi, default: cpu=4/mem=16Gi, min/max 강제)
-- [x] **ResourceQuota (Phase E)** — ai-team 네임스페이스 GPU 16장 상한 포함 CPU/Memory/Pod 상한 확립
+이 레포는 **재구축 완료 시점(2026-04-28)**을 기준으로 작성되었습니다.
+운영 단계 기록은 별도 레포에서 이어집니다.
 
----
-
-## 🏁 향후 계획
-
-- [ ] Ingress Phase B — Grafana · Argo · MLflow · Filebrowser HTTPS host 라우팅 + Basic Auth 보호 계층 동시 적용
-- [ ] YOLOv8 Serving 보호 정책 — Basic Auth 또는 API Key 적용 (현재 인증 없음)
-- [ ] Let's Encrypt DNS-01 — 본인 소유 도메인 확보 후 공인 인증서 전환
+- 운영 레포: (링크 추가 예정)
+- 포트폴리오 압축 레포: (링크 추가 예정)
 
 ---
 
