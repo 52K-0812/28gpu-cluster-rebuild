@@ -36,10 +36,10 @@
 [GPU 노드 (153~156)]
     │  10G 데이터망 (10.10.10.x)
     │  → 실제 학습 데이터 전송
-    └──→ NAS (10.10.10.157)
+    └──→ NAS (<NAS-10G-IP>)
 ```
 
-> **핵심 설계:** master-01은 1G망만 있으므로 NFS Provisioner는 1G 주소(MASTER-IP)로 제어하고, GPU 노드는 10G망(10.10.10.157)으로 데이터 직접 접근
+> **핵심 설계:** master-01은 1G망만 있으므로 NFS Provisioner는 1G 주소(MASTER-IP)로 제어하고, GPU 노드는 10G망(<NAS-10G-IP>)으로 데이터 직접 접근
 
 ---
 
@@ -103,7 +103,7 @@ sudo apt install -y nfs-kernel-server
 echo "/data MASTER-IP/24(rw,sync,no_subtree_check,no_root_squash)" | sudo tee -a /etc/exports
 
 # 10G 데이터망 대역 허용
-echo "/data 10.10.10.157/24(rw,sync,no_subtree_check,no_root_squash)" | sudo tee -a /etc/exports
+echo "/data <NAS-10G-IP>/24(rw,sync,no_subtree_check,no_root_squash)" | sudo tee -a /etc/exports
 
 # 설정 적용
 sudo exportfs -ra
@@ -156,13 +156,13 @@ network:
           via: MASTER-IP
     enp2s0f0: # eno2 아님! 반드시 ip link show 로 확인한 이름 사용
       addresses:
-        - 10.10.10.157/24
+        - <NAS-10G-IP>/24
       mtu: 9000 # 점보 프레임 (10G 성능 최대화)
 ```
 
 ```bash
 sudo netplan apply
-ip addr show enp2s0f0  # 10.10.10.157 확인
+ip addr show enp2s0f0  # <NAS-10G-IP> 확인
 ```
 
 ### 1-3. GPU 노드 10G 설정 (153~156 각각)
@@ -187,18 +187,18 @@ network:
           via: MASTER-IP
     enp2s0f1: # 10G 데이터망 인터페이스 (DGX Station)
       addresses:
-        - 10.10.10.153/24
+        - <V100-10G-IP>/24
 ```
 
 > **노드별 10G IP 매핑:**
 >
 > | 노드          | 10G IP        | 10G 인터페이스 |
 > | ------------- | ------------- | -------------- |
-> | v100-gpu-01   | 10.10.10.153  | enp2s0f1       |
-> | 2080ti-gpu-02 | 10.10.10.154  | eno2           |
-> | 2080ti-gpu-03 | 10.10.10.155  | eno2           |
-> | 2080ti-gpu-04 | 10.10.10.156  | eno2           |
-> | NAS           | 10.10.10.157  | enp2s0f0       |
+> | v100-gpu-01   | <V100-10G-IP>  | enp2s0f1       |
+> | 2080ti-gpu-02 | <2080TI-02-10G-IP>  | eno2           |
+> | 2080ti-gpu-03 | <2080TI-03-10G-IP>  | eno2           |
+> | 2080ti-gpu-04 | <2080TI-04-10G-IP>  | eno2           |
+> | NAS           | <NAS-10G-IP>  | enp2s0f0       |
 
 ```bash
 sudo netplan apply
@@ -211,7 +211,7 @@ sudo netplan apply
 iperf3 -s
 
 # GPU 노드(153)에서 속도 테스트
-iperf3 -c 10.10.10.157
+iperf3 -c <NAS-10G-IP>
 # 목표: 9.0 ~ 9.6 Gbits/sec
 ```
 
@@ -287,7 +287,7 @@ helm repo update
 ### 3-2. NFS Provisioner 배포
 
 > **중요:** NFS Provisioner는 반드시 master-01에 배치해야 함.
-> master-02는 10G망 없음 → 10.10.10.157 연결 불가.
+> master-02는 10G망 없음 → <NAS-10G-IP> 연결 불가.
 > NFS Provisioner 제어는 1G 주소(MASTER-IP) 사용.
 
 ```bash
@@ -642,7 +642,7 @@ kubectl delete job gpu-test-v100 gpu-test-2080ti
 # 전체 노드 일괄 테스트 (NAS에서 iperf3 -s 실행 후)
 for node in xxx.xxx.xxx.153 xxx.xxx.xxx.154 xxx.xxx.xxx.155 xxx.xxx.xxx.156; do
   echo "=== $node ==="
-  ssh ubuntu@$node "iperf3 -c 10.10.10.157"
+  ssh ubuntu@$node "iperf3 -c <NAS-10G-IP>"
 done
 # 목표: 전 노드 9Gbits/sec 이상
 ```
@@ -723,7 +723,7 @@ sudo netplan apply
 **망 분리 운영 원칙:**
 
 - master(151) → NAS 제어: `MASTER-IP` (1G)
-- GPU 노드(153~156) → 데이터 전송: `10.10.10.157` (10G)
+- GPU 노드(153~156) → 데이터 전송: `<NAS-10G-IP>` (10G)
 - NFS Provisioner 설정: 반드시 `MASTER-IP` (1G 주소) 사용
 
 ---
