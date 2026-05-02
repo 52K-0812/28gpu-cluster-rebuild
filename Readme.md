@@ -10,7 +10,83 @@
 >
 > 프로젝트 시작 시점에는 인프라 운영 경험이 많지 않았지만 AI를 문제 해결 보조 도구로 활용해 실제 작업을 진행했고 부족한 개념은 이후 학습과 문서화를 통해 보완했습니다.
 
-![자료사진](docs/images/20260312_204425.jpg)
+![서버실 GPU 클러스터 전경](docs/images/20260312_204425.jpg)
+
+---
+
+## ✨ Key Results
+
+| 영역 | 결과 |
+| --- | --- |
+| **GPU** | V100 4 + 2080Ti 23 = **27장** 통합 K8s 클러스터 |
+| **스토리지** | NFS 27.3TB · 10GbE 직결 (전 노드 ~9Gbps, 1G 대비 약 10배) |
+| **ML 파이프라인** | git push → Argo Workflow 자동 트리거(16초) → MLflow → FastAPI champion |
+| **서비스 노출** | NGINX Ingress + cert-manager TLS · host 기반 라우팅 (hub / serving) |
+| **거버넌스** | PriorityClass 4계층 · LimitRange · ResourceQuota (GPU 16장 상한) |
+| **백업/DR** | 호스트 crontab → NAS · snapshot 무결성 DR 검증 완료 |
+| **구축 기간** | **약 7주** (2026-03-12 ~ 04-28) · 단독 수행 |
+
+> 핵심만 추린 요약입니다. 전체 결과 26행은 본문 하단 [최종 결과](#-최종-결과) 참조.
+
+---
+
+## 🗺️ 시스템 한 장 — 노드 / 네트워크 / 스토리지
+
+```mermaid
+graph TD
+    EXT1["🌐 Tailscale VPN<br/>TAILSCALE-IP"]
+    EXT2["🌐 캠퍼스 내부망<br/>NGINX Ingress<br/>LB-INGRESS-IP"]
+
+    subgraph MGMT["관리망 — 1GbE (Cisco Catalyst 2960G)"]
+        M01["master-01<br/>Control Plane 전용<br/>NoSchedule taint<br/>GitHub Runner · etcd 백업"]
+        M02["master-02<br/>시스템 파드 전담<br/>Prometheus · Grafana · Portainer<br/>MLflow · Argo · NGINX Ingress"]
+        NAS1G["NAS (nas-01)<br/>28TB<br/>1G: NAS-1G-IP"]
+    end
+
+    subgraph DATA["데이터망 — 10GbE (NETGEAR XS508M)"]
+        G1["v100-gpu-01<br/>V100 × 4<br/>학습 전용"]
+        G2["2080ti-gpu-02<br/>2080Ti × 8"]
+        G3["2080ti-gpu-03<br/>2080Ti × 7"]
+        G4["2080ti-gpu-04<br/>2080Ti × 8"]
+        NAS10G["NAS (nas-01)<br/>10G: NAS-10G-IP"]
+    end
+
+    EXT1 -->|VPN| M01
+    EXT2 -->|MetalLB L2| M02
+    M01 --- M02
+    M01 --- NAS1G
+    M02 --- NAS1G
+
+    G1 -->|10GbE| NAS10G
+    G2 -->|10GbE| NAS10G
+    G3 -->|10GbE| NAS10G
+    G4 -->|10GbE| NAS10G
+
+    style M01 fill:#dbeafe,stroke:#2563eb
+    style M02 fill:#dbeafe,stroke:#2563eb
+    style NAS1G fill:#dcfce7,stroke:#16a34a
+    style NAS10G fill:#dcfce7,stroke:#16a34a
+    style G1 fill:#fef3c7,stroke:#d97706
+    style G2 fill:#fee2e2,stroke:#dc2626
+    style G3 fill:#fee2e2,stroke:#dc2626
+    style G4 fill:#fee2e2,stroke:#dc2626
+    style EXT2 fill:#ede9fe,stroke:#7c3aed
+```
+
+> **상세 다이어그램** (ML 파이프라인 흐름 / 서비스 맵 / 스토리지 / PriorityClass) → [docs/overview/cluster-diagram.md](docs/overview/cluster-diagram.md)
+
+---
+
+## 🔗 Quick Links
+
+| 문서 | 설명 |
+| --- | --- |
+| [📐 Architecture](docs/overview/current-architecture.md) | 노드 / 네트워크 / 서비스 / 스토리지 / 거버넌스 (한 장 요약) |
+| [📊 Cluster Diagrams](docs/overview/cluster-diagram.md) | 토폴로지 · 파이프라인 · 서비스 맵 Mermaid 5종 |
+| [🗓️ Timeline](docs/overview/timeline.md) | 3/12 ~ 4/28 작업 흐름 상세 |
+| [📓 Journal](docs/journal/) | Phase 1~5 날짜순 작업 기록 |
+| [📕 Runbooks](docs/runbooks/) | etcd 복원 / Argo DAG / 모델 서빙 / Ingress TLS / DNS-01 |
+| [🚨 Incidents](docs/incidents/) | 장애 14건 분석 기록 |
 
 ---
 
@@ -40,7 +116,7 @@
 
 클러스터를 처음 만졌을 때는 리눅스 명령어도 낯설었습니다. AI를 문제 해결 도구로 적극 활용하며 빠르게 실행했고, 모든 작업을 저널 형식으로 기록해 쌓인 문서를 다시 학습 자료로 삼아 기초 개념까지 역방향으로 이해해 나갔습니다. 속도보다 기록을 먼저 챙겼고, 그 기록이 이 레포를 구성합니다.
 
-![4장뿐이였던메뉴얼](docs/images/KakaoTalk_20260413_143557870.jpg)
+![인수받은 4페이지 레거시 재기동 매뉴얼](docs/images/KakaoTalk_20260413_143557870.jpg)
 
 ---
 
@@ -141,7 +217,7 @@ Phase 5  서비스 노출 및 운영 안정화 (4/27 ~ 4/28)
 
 > 소프트웨어 설정이 아닌 **물리 하드웨어 재배치**로 해결한 사례입니다.
 
-![자료사진](docs/images/20260323_182524.jpg)
+![master-01에서 NAS로 이전한 10G PCIe NIC 작업](docs/images/20260323_182524.jpg)
 
 ---
 
@@ -151,7 +227,7 @@ Phase 5  서비스 노출 및 운영 안정화 (4/27 ~ 4/28)
 
 > 완벽한 28장보다 지금 동작하는 27장이 더 가치 있다는 트레이드오프 판단입니다.
 
-![자료사진](docs/images/20260324_140843.jpg)
+![2080Ti 1장 미인식 진단 작업](docs/images/20260324_140843.jpg)
 
 ---
 
@@ -282,9 +358,9 @@ passwd ubuntu && sync && reboot -f
 
 세 단계 완료 후 0번 SSD를 `Global Hot Spare`로 지정 → OS 미러링 자동 복구, RAID 5 27.3TB 재생성.
 
-![자료사진](docs/images/20260316_130432.jpg)
-![자료사진](docs/images/20260316_184714.jpg)
-![자료사진](docs/images/20260316_191154.jpg)
+![MegaRAID BIOS — Unconfigured Bad 상태 0번 SSD](docs/images/20260316_130432.jpg)
+![Foreign Config Clear 직후 RAID 상태](docs/images/20260316_184714.jpg)
+![RAID 5 27.3TB 재생성 완료](docs/images/20260316_191154.jpg)
 
 ---
 
@@ -336,11 +412,13 @@ sudo systemctl disable kubectl-jupyterhub.service
 
 ## 🏁 이후 방향
 
-이 레포는 **재구축 완료 시점(2026-04-28)**을 기준으로 작성되었습니다.
-운영 단계 기록은 별도 레포에서 이어집니다.
+이 레포는 **재구축 완료 시점(2026-04-28)** 을 기준으로 작성된 기록입니다.
+운영 단계(트래픽 · 데이터 · 모델 라이프사이클)는 별도 레포로 분리합니다.
 
-- 운영 레포: (링크 추가 예정)
-- 포트폴리오 압축 레포: (링크 추가 예정)
+- **운영 레포** — *TBD (운영 단계 시작 시 추가)*
+- **포트폴리오 압축 레포** — *TBD (별도 큐레이션 예정)*
+
+> 이 레포의 범위: 재구축 7주(2026-03-12 ~ 04-28) 동안 발생한 의사결정 · 작업 기록 · 장애 대응의 **증거 보존**.
 
 ---
 
