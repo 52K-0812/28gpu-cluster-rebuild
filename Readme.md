@@ -580,3 +580,10 @@ sudo systemctl disable kubectl-jupyterhub.service
 | [Alertmanager Silence — DaemonSet 오탐 억제](docs/incidents/4_09_Alertmanager_Silence_DaemonSet_알람_억제.md)         | continuous-image-puller 오탐 분석 · PrometheusRule 대신 Silence 적용                                                   |
 | [이미지화 장애 3건 ⭐](docs/incidents/4_16_incidents_이미지화_장애_3건.md)                                            | containerd namespace 격리 · ConfigMap read-only 충돌 · nodeSelector 범위 불일치                                        |
 | [Grafana chart 의도치 않은 업그레이드 ⭐](docs/incidents/4_28_grafana_chart_upgrade.md)                               | helm upgrade 버전 미고정 → chart 자동 업그레이드 → CrashLoopBackOff · NodePort 변경 · PVC 미마운트 · 동일 세션 내 복구 |
+
+## Contact
+
+이 프로젝트는 AI 인프라 / MLOps 엔지니어 포트폴리오 목적으로 정리되었습니다.
+
+- GitHub: [52K-0812](https://github.com/52K-0812)
+- LinkedIn: [LinkedIn Profile](https://www.linkedin.com/in/원재-김-b53232396)
