@@ -16,15 +16,15 @@
 
 ## ✨ Key Results
 
-| 영역 | 결과 |
-| --- | --- |
-| **GPU** | V100 4 + 2080Ti 23 = **27장** 통합 K8s 클러스터 |
-| **스토리지** | NFS 27.3TB · 10GbE 직결 (전 노드 ~9Gbps, 1G 대비 약 10배) |
+| 영역 | 결과                                                               |
+| ------------ | ---------------------------------------------------------------- |
+| **GPU** | V100 4 + 2080Ti 23 = **27장** 통합 K8s 클러스터                         |
+| **스토리지** | NFS 27.3TB · 10GbE 직결 (전 노드 ~9Gbps, 1G 대비 약 10배)                 |
 | **ML 파이프라인** | git push → Argo Workflow 자동 트리거(16초) → MLflow → FastAPI champion |
-| **서비스 노출** | NGINX Ingress + cert-manager TLS · host 기반 라우팅 (hub / serving) |
-| **거버넌스** | PriorityClass 4계층 · LimitRange · ResourceQuota (GPU 16장 상한) |
-| **백업/DR** | 호스트 crontab → NAS · snapshot 무결성 DR 검증 완료 |
-| **구축 기간** | **약 7주** (2026-03-12 ~ 04-28) · 단독 수행 |
+| **서비스 노출** | NGINX Ingress + cert-manager TLS · host 기반 라우팅 (hub / serving)   |
+| **거버넌스** | PriorityClass 4계층 · LimitRange · ResourceQuota (GPU 16장 상한)      |
+| **백업/DR** | 호스트 crontab → NAS · snapshot 무결성 DR 검증 완료                        |
+| **구축 기간** | **약 7주** (2026-03-12 ~ 04-28) · 단독 수행                            |
 
 > 핵심만 추린 요약입니다. 전체 결과 26행은 본문 하단 [최종 결과](#-최종-결과) 참조.
 
@@ -79,14 +79,15 @@ graph TD
 
 ## 🔗 Quick Links
 
-| 문서 | 설명 |
-| --- | --- |
-| [📐 Architecture](docs/overview/current-architecture.md) | 노드 / 네트워크 / 서비스 / 스토리지 / 거버넌스 (한 장 요약) |
-| [📊 Cluster Diagrams](docs/overview/cluster-diagram.md) | 토폴로지 · 파이프라인 · 서비스 맵 Mermaid 5종 |
-| [🗓️ Timeline](docs/overview/timeline.md) | 3/12 ~ 4/28 작업 흐름 상세 |
-| [📓 Journal](docs/journal/) | Phase 1~5 날짜순 작업 기록 |
-| [📕 Runbooks](docs/runbooks/) | etcd 복원 / Argo DAG / 모델 서빙 / Ingress TLS / DNS-01 |
-| [🚨 Incidents](docs/incidents/) | 장애 14건 분석 기록 |
+| 문서                                                       | 설명                                                |     |
+| -------------------------------------------------------- | ------------------------------------------------- | --- |
+| [📐 Architecture](docs/overview/current-architecture.md) | 노드 / 네트워크 / 서비스 / 스토리지 / 거버넌스 (한 장 요약)            |     |
+| [📊 Cluster Diagrams](docs/overview/cluster-diagram.md)  | 토폴로지 · 파이프라인 · 서비스 맵 Mermaid 5종                   |     |
+| [🗓️ Timeline](docs/overview/timeline.md)                | 3/12 ~ 4/28 작업 흐름 상세                              |     |
+| [📓 Journal](docs/journal/)                              | Phase 1~5 날짜순 작업 기록                               |     |
+| [📕 Runbooks](docs/runbooks/)                            | etcd 복원 / Argo DAG / 모델 서빙 / Ingress TLS / DNS-01 |     |
+| [🚨 Incidents](docs/incidents/)                          | 장애 14건 분석 기록                                      |     |
+| [📷evidence](docs/evidence/)                             | 스크린샷/로그/성능 결과                                     |     |
 
 ---
 
@@ -122,32 +123,32 @@ graph TD
 
 ## ✅ 최종 결과
 
-| 항목                  | 결과                                                                                                 |
-| --------------------- | ---------------------------------------------------------------------------------------------------- |
-| 총 GPU                | V100 4장 + 2080Ti 23장 = **27장 통합**                                                               |
-| 스토리지              | **27.3TB** NFS 마운트 완료                                                                           |
-| 내부 네트워크         | **전 노드 ~9Gbps** (1G → 10G, 약 10배)                                                               |
-| 모니터링              | Grafana GPU 실시간 대시보드 (온도/전력/메모리)                                                       |
-| Ingress Gateway       | NGINX Ingress Controller + cert-manager 도입, 단일 IP `INGRESS-LB-IP`에서 host 기반 라우팅 구성      |
-| HTTPS 접속            | `https://hub.INGRESS-LB-IP.nip.io` / `https://serving.INGRESS-LB-IP.nip.io`                          |
-| TLS                   | cluster-ca self-signed 인증서, DNS SAN 포함, cert-manager 관리                                       |
-| 인증                  | GitHub OAuth 적용 완료 (DummyAuthenticator 제거 — 2026-04-27)                                        |
-| 관리자 접속           | Grafana `:30300` / Prometheus `:30310` / Portainer `:30320` (Phase B Ingress 통합 예정)              |
-| 팀 환경               | JupyterHub (GitHub 계정 기반 인증, GPU 자동 배정, NFS 홈 디렉토리, Notebook 셀 실행 검증 완료)       |
-| GPU 검증              | TensorFlow / PyTorch CUDA 인식 · MNIST 학습 동작 검증                                                |
-| ML 학습               | YOLOv8 COCO mAP@0.5 46.8% / VisDrone mAP@0.5 33.4% (V100 4장 DDP)                                    |
-| 알람                  | GPU 온도/메모리/노드 다운 3종 → Gmail 자동 통보                                                      |
-| 워크플로우            | Argo Workflows — 팀원 웹 UI로 학습 Job 제출 가능                                                     |
-| MLflow                | 실험 추적 · params 105개 + metrics 자동 기록 · Registry alias(champion) 기반 버전 관리               |
-| 모델 서빙             | FastAPI `/predict`(champion) · `/predict-demo`(COCO) · `https://serving.INGRESS-LB-IP.nip.io` · 77ms |
-| 워크로드 우선순위     | PriorityClass 4계층 도입 완료 — 시스템 파드 eviction 보호, 서빙/학습 계층화                          |
-| LimitRange            | `ai-team-default-compute` — 컨테이너 기본 request/limit 자동 주입, min/max 강제 (2026-04-28)         |
-| ResourceQuota         | `ai-team-compute-quota` — GPU 16장 상한, CPU/Memory/Pod 네임스페이스 상한 적용 (2026-04-28)          |
-| RBAC / Namespace 격리 | `ai-team` 네임스페이스 + RBAC 격리 환경 (학생 Job 제출 권한 분리)                                    |
-| etcd 정기 백업        | 호스트 crontab → NAS 자동 저장, snapshot 무결성 DR 검증 완료                                         |
-| Filebrowser           | NAS 웹 파일 탐색기 배포 (monitoring 네임스페이스)                                                    |
-| GitHub Actions CI/CD  | 코드 push → Argo Workflow 자동 트리거 파이프라인 (16초 완료)                                         |
-| 구축 기간             | **약 7주** (3/12 ~ 4/28)                                                                             |
+| 항목                   | 결과                                                                                             |
+| -------------------- | ---------------------------------------------------------------------------------------------- |
+| 총 GPU                | V100 4장 + 2080Ti 23장 = **27장 통합**                                                              |
+| 스토리지                 | **27.3TB** NFS 마운트 완료                                                                          |
+| 내부 네트워크              | **전 노드 ~9Gbps** (1G → 10G, 약 10배)                                                              |
+| 모니터링                 | Grafana GPU 실시간 대시보드 (온도/전력/메모리)                                                               |
+| Ingress Gateway      | NGINX Ingress Controller + cert-manager 도입, 단일 IP `INGRESS-LB-IP`에서 host 기반 라우팅 구성             |
+| HTTPS 접속             | `https://hub.INGRESS-LB-IP.nip.io` / `https://serving.INGRESS-LB-IP.nip.io`                    |
+| TLS                  | cluster-ca self-signed 인증서, DNS SAN 포함, cert-manager 관리                                        |
+| 인증                   | GitHub OAuth 적용 완료 (DummyAuthenticator 제거 — 2026-04-27)                                        |
+| 관리자 접속               | Grafana `:30300` / Prometheus `:30310` / Portainer `:30320` (Phase B Ingress 통합 예정)            |
+| 팀 환경                 | JupyterHub (GitHub 계정 기반 인증, GPU 자동 배정, NFS 홈 디렉토리, Notebook 셀 실행 검증 완료)                       |
+| GPU 검증               | TensorFlow / PyTorch CUDA 인식 · MNIST 학습 동작 검증                                                  |
+| ML 학습                | YOLOv8 COCO mAP@0.5 46.8% / VisDrone mAP@0.5 33.4% (V100 4장 DDP)                               |
+| 알람                   | GPU 온도/메모리/노드 다운 3종 → Gmail 자동 통보                                                              |
+| 워크플로우                | Argo Workflows — 팀원 웹 UI로 학습 Job 제출 가능                                                         |
+| MLflow               | 실험 추적 · params 105개 + metrics 자동 기록 · Registry alias(champion) 기반 버전 관리                        |
+| 모델 서빙                | FastAPI `/predict`(champion) · `/predict-demo`(COCO) · `https://serving.INGRESS-LB-IP.nip.io`  |
+| 워크로드 우선순위            | PriorityClass 4계층 도입 완료 — 시스템 파드 eviction 보호, 서빙/학습 계층화                                        |
+| LimitRange           | `ai-team-default-compute` — 컨테이너 기본 request/limit 자동 주입, min/max 강제 (2026-04-28)               |
+| ResourceQuota        | `ai-team-compute-quota` — GPU 16장 상한, CPU/Memory/Pod 네임스페이스 상한 적용 (2026-04-28)                 |
+| RBAC / Namespace 격리  | `ai-team` 네임스페이스 + RBAC 격리 환경 (학생 Job 제출 권한 분리)                                                |
+| etcd 정기 백업           | 호스트 crontab → NAS 자동 저장, snapshot 무결성 DR 검증 완료                                                 |
+| Filebrowser          | NAS 웹 파일 탐색기 배포 (monitoring 네임스페이스)                                                            |
+| GitHub Actions CI/CD | 코드 push → Argo Workflow 자동 트리거 파이프라인 (20초 완료)                                                  |
+| 구축 기간                | **약 7주** (3/12 ~ 4/28)                                                                         |
 
 ---
 
@@ -538,21 +539,21 @@ sudo systemctl disable kubectl-jupyterhub.service
 
 ### 4. ML 파이프라인 구축
 
-| 문서                                                                                                                                      | 내용                                                                                          |
-| ----------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------- |
-| [YOLOv8 COCO 학습 및 웹캠 추론 ⭐](docs/journal/4.ML_파이프라인_구축/4_02_YOLOv8_COCO_학습_및_웹캠_추론_테스트.md)                        | K8s Job 파이프라인 · mAP@0.5 46.8% · 실시간 추론 성공                                         |
-| [YOLOv8 VisDrone 멀티GPU 학습 Job ⭐](docs/journal/4.ML_파이프라인_구축/4_03_YOLOv8_VisDrone_멀티GPU_학습_Job.md)                         | V100 4장 DDP · VisDrone 드론 Object Detection 학습                                            |
-| [YOLOv8 VisDrone 학습 결과 보고서](docs/journal/4.ML_파이프라인_구축/4_04_YOLOv8_VisDrone_학습_결과_보고서.md)                            | 학습 결과 분석 · mAP@0.5 33.4% · 소형 객체 한계 분석                                          |
-| [Argo Workflows 설치 및 WorkflowTemplate 구성 ⭐](docs/journal/4.ML_파이프라인_구축/4_06_Argo_Workflows_설치_및_WorkflowTemplate_구성.md) | Helm 설치 · MetalLB UI 노출 · 팀원 웹 UI Job 제출 환경 완성                                   |
-| [Alertmanager 이메일 알람 구성 ⭐](docs/journal/4.ML_파이프라인_구축/4_07_Alertmanager_이메일_알람_구성.md)                               | Gmail SMTP 연동 · GPU 온도/메모리/노드 다운 알람 3종 · 실제 수신 확인                         |
-| [Argo DAG 파이프라인 구성 ⭐](docs/runbooks/runbook_argo_dag.md)                                                                          | 데이터검증→학습→평가→버전별저장 4단계 · visdrone-v1.pt/v2.pt 버전 관리                        |
-| [Argo Workflows Tailscale 접속 및 포트 변경](docs/journal/4.ML_파이프라인_구축/4_09_Argo_Workflows_Tailscale_접속_및_포트_변경.md)        | 포트 2746 → 30500 · systemd port-forward · Tailscale 외부 접속                                |
-| [MLflow 설치 및 Argo DAG 연동 ⭐](docs/journal/4.ML_파이프라인_구축/4_13_MLflow_설치_및_Argo_DAG_연동.md)                                 | PostgreSQL 백엔드 · params 105개 + metrics 자동 기록 · 버전별 모델 저장                       |
-| [GitHub Actions CI/CD ⭐](docs/journal/4.ML_파이프라인_구축/4_13_GitHub_Actions_CICD.md)                                                  | Self-hosted Runner · git push → Argo Workflow 자동 트리거 · 16s 완료                          |
-| [MLflow alias + FastAPI 엔드포인트 분리 ⭐](docs/journal/4.ML_파이프라인_구축/4_15_MLflow_alias_FastAPI_엔드포인트_분리.md)               | Registry alias(champion) · NAS 우선 로드 · /predict-demo / /predict 분리 · 웹 UI 구축         |
-| [YOLOv8 서빙 이미지화 ⭐](docs/journal/4.ML_파이프라인_구축/4_16_YOLOv8_서빙_이미지화.md)                                                 | nerdctl + buildkit 빌드 · pip install 런타임 제거 · ConfigMap 마운트 해제 · 장애 3건 해소     |
-| [서빙 이미지 DockerHub 등록 ⭐](docs/journal/4.ML_파이프라인_구축/4_17_YOLOv8_서빙_이미지_DockerHub_등록.md)                              | `1jkim/yolov8-serving:v1` push · hostname nodeSelector 고정 해제 · 2080Ti 풀 전체 스케줄 가능 |
-| [etcd 백업 및 DR 검증 ⭐](docs/runbooks/runbook_etcd_restore.md)                                                                          | 호스트 crontab 자동 백업 · NAS 저장 · snapshot 무결성 검증                                    |
+| 문서                                                                                                                      | 내용                                                                                |
+| ----------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------- |
+| [YOLOv8 COCO 학습 및 웹캠 추론 ⭐](docs/journal/4.ML_파이프라인_구축/4_02_YOLOv8_COCO_학습_및_웹캠_추론_테스트.md)                               | K8s Job 파이프라인 · mAP@0.5 46.8% · 실시간 추론 성공                                         |
+| [YOLOv8 VisDrone 멀티GPU 학습 Job ⭐](docs/journal/4.ML_파이프라인_구축/4_03_YOLOv8_VisDrone_멀티GPU_학습_Job.md)                       | V100 4장 DDP · VisDrone 드론 Object Detection 학습                                     |
+| [YOLOv8 VisDrone 학습 결과 보고서](docs/journal/4.ML_파이프라인_구축/4_04_YOLOv8_VisDrone_학습_결과_보고서.md)                               | 학습 결과 분석 · mAP@0.5 33.4% · 소형 객체 한계 분석                                            |
+| [Argo Workflows 설치 및 WorkflowTemplate 구성 ⭐](docs/journal/4.ML_파이프라인_구축/4_06_Argo_Workflows_설치_및_WorkflowTemplate_구성.md) | Helm 설치 · MetalLB UI 노출 · 팀원 웹 UI Job 제출 환경 완성                                    |
+| [Alertmanager 이메일 알람 구성 ⭐](docs/journal/4.ML_파이프라인_구축/4_07_Alertmanager_이메일_알람_구성.md)                                   | Gmail SMTP 연동 · GPU 온도/메모리/노드 다운 알람 3종 · 실제 수신 확인                                 |
+| [Argo DAG 파이프라인 구성 ⭐](docs/runbooks/runbook_argo_dag.md)                                                                | 데이터검증→학습→평가→버전별저장 4단계 · visdrone-v1.pt/v2.pt 버전 관리                                |
+| [Argo Workflows Tailscale 접속 및 포트 변경](docs/journal/4.ML_파이프라인_구축/4_09_Argo_Workflows_Tailscale_접속_및_포트_변경.md)           | 포트 2746 → 30500 · systemd port-forward · Tailscale 외부 접속                          |
+| [MLflow 설치 및 Argo DAG 연동 ⭐](docs/journal/4.ML_파이프라인_구축/4_13_MLflow_설치_및_Argo_DAG_연동.md)                                 | PostgreSQL 백엔드 · params 105개 + metrics 자동 기록 · 버전별 모델 저장                          |
+| [GitHub Actions CI/CD ⭐](docs/journal/4.ML_파이프라인_구축/4_13_GitHub_Actions_CICD.md)                                        | Self-hosted Runner · git push → Argo Workflow 자동 트리거 · 16s 완료                     |
+| [MLflow alias + FastAPI 엔드포인트 분리 ⭐](docs/journal/4.ML_파이프라인_구축/4_15_MLflow_alias_FastAPI_엔드포인트_분리.md)                   | Registry alias(champion) · NAS 우선 로드 · /predict-demo / /predict 분리 · 웹 UI 구축      |
+| [YOLOv8 서빙 이미지화 ⭐](docs/journal/4.ML_파이프라인_구축/4_16_YOLOv8_서빙_이미지화.md)                                                   | nerdctl + buildkit 빌드 · pip install 런타임 제거 · ConfigMap 마운트 해제 · 장애 3건 해소          |
+| [서빙 이미지 DockerHub 등록 ⭐](docs/journal/4.ML_파이프라인_구축/4_17_YOLOv8_서빙_이미지_DockerHub_등록.md)                                  | `1jkim/yolov8-serving:v1` push · hostname nodeSelector 고정 해제 · 2080Ti 풀 전체 스케줄 가능 |
+| [etcd 백업 및 DR 검증 ⭐](docs/runbooks/runbook_etcd_restore.md)                                                              | 호스트 crontab 자동 백업 · NAS 저장 · snapshot 무결성 검증                                      |
 
 ### 5. 서비스 노출 및 운영 안정화
 
