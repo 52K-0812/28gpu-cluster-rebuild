@@ -147,7 +147,7 @@ graph TD
 | RBAC / Namespace 격리  | `ai-team` 네임스페이스 + RBAC 격리 환경 (학생 Job 제출 권한 분리)                                                |
 | etcd 정기 백업           | 호스트 crontab → NAS 자동 저장, snapshot 무결성 DR 검증 완료                                                 |
 | Filebrowser          | NAS 웹 파일 탐색기 배포 (monitoring 네임스페이스)                                                            |
-| GitHub Actions CI/CD | 코드 push → Argo Workflow 자동 트리거 파이프라인 (20초 완료)                                                  |
+| GitHub Actions CI/CD  | GitHub Actions workflow_dispatch → Argo Workflow 수동 트리거 · epochs/batch/model_version 파라미터 지정 실행 |
 | 구축 기간                | **약 7주** (3/12 ~ 4/28)                                                                         |
 
 ---
@@ -172,7 +172,7 @@ Phase 3  팀 환경 구축 및 서비스 안정화 (3/30 ~ 4/2)
 
 Phase 4  ML 파이프라인 및 서빙 구축 (4/2 ~ 4/17)
   └ YOLOv8 COCO / VisDrone 학습 Job · Argo DAG 4단계 파이프라인 · Alertmanager
-  └ MLflow 실험 추적 + Argo 연동 · GitHub Actions CI/CD (git push → 16s 트리거)
+  └ MLflow 실험 추적 + Argo 연동 · GitHub Actions CI/CD (workflow_dispatch → 수동 트리거 · 버전/epoch/batch 파라미터 지정)
   └ FastAPI 서빙 + 웹 UI · 서빙 이미지화 (pip install 제거) · DockerHub 등록
   └ 상세 → docs/journal/4.ML_파이프라인_구축/
 
