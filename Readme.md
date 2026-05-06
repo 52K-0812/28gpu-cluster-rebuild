@@ -20,7 +20,7 @@
 | ------------ | ---------------------------------------------------------------- |
 | **GPU** | V100 4 + 2080Ti 23 = **27장** 통합 K8s 클러스터                         |
 | **스토리지** | NFS 27.3TB · 10GbE 직결 (전 노드 ~9Gbps, 1G 대비 약 10배)                 |
-| **ML 파이프라인** | git push → Argo Workflow 자동 트리거(16초) → MLflow → FastAPI champion |
+| **ML 파이프라인** | workflow_dispatch 수동 트리거 → Argo Workflow → MLflow → FastAPI champion |
 | **서비스 노출** | NGINX Ingress + cert-manager TLS · host 기반 라우팅 (hub / serving)   |
 | **거버넌스** | PriorityClass 4계층 · LimitRange · ResourceQuota (GPU 16장 상한)      |
 | **백업/DR** | 호스트 crontab → NAS · snapshot 무결성 DR 검증 완료                        |
@@ -549,7 +549,8 @@ sudo systemctl disable kubectl-jupyterhub.service
 | [Argo DAG 파이프라인 구성 ⭐](docs/runbooks/runbook_argo_dag.md)                                                                | 데이터검증→학습→평가→버전별저장 4단계 · visdrone-v1.pt/v2.pt 버전 관리                                |
 | [Argo Workflows Tailscale 접속 및 포트 변경](docs/journal/4.ML_파이프라인_구축/4_09_Argo_Workflows_Tailscale_접속_및_포트_변경.md)           | 포트 2746 → 30500 · systemd port-forward · Tailscale 외부 접속                          |
 | [MLflow 설치 및 Argo DAG 연동 ⭐](docs/journal/4.ML_파이프라인_구축/4_13_MLflow_설치_및_Argo_DAG_연동.md)                                 | PostgreSQL 백엔드 · params 105개 + metrics 자동 기록 · 버전별 모델 저장                          |
-| [GitHub Actions CI/CD ⭐](docs/journal/4.ML_파이프라인_구축/4_13_GitHub_Actions_CICD.md)                                        | Self-hosted Runner · git push → Argo Workflow 자동 트리거 · 16s 완료                     |
+| [GitHub Actions CI/CD ⭐](docs/journal/4.ML_파이프라인_구축/4_13_GitHub_Actions_CICD.md)                                        | Self-hosted Runner · workflow_dispatch 수동 트리거 · epochs/batch/model_version 파라미터 지정  |
+| [GitHub Actions CI/CD 트리거 변경](docs/journal/4.ML_파이프라인_구축/5_06_GitHub_Actions_CICD_트리거_변경.md)                              | push → workflow_dispatch 전환 · model_version 폴백 버그 수정 · GPU 낭비 방지                  |
 | [MLflow alias + FastAPI 엔드포인트 분리 ⭐](docs/journal/4.ML_파이프라인_구축/4_15_MLflow_alias_FastAPI_엔드포인트_분리.md)                   | Registry alias(champion) · NAS 우선 로드 · /predict-demo / /predict 분리 · 웹 UI 구축      |
 | [YOLOv8 서빙 이미지화 ⭐](docs/journal/4.ML_파이프라인_구축/4_16_YOLOv8_서빙_이미지화.md)                                                   | nerdctl + buildkit 빌드 · pip install 런타임 제거 · ConfigMap 마운트 해제 · 장애 3건 해소          |
 | [서빙 이미지 DockerHub 등록 ⭐](docs/journal/4.ML_파이프라인_구축/4_17_YOLOv8_서빙_이미지_DockerHub_등록.md)                                  | `1jkim/yolov8-serving:v1` push · hostname nodeSelector 고정 해제 · 2080Ti 풀 전체 스케줄 가능 |
